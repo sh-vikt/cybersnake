@@ -1,0 +1,415 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background: radial-gradient(circle at center, #11162b 0%, #060811 100%);
+  color: #fff;
+  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  overflow-x: hidden;
+}
+
+.cyan { color: #00f3ff; text-shadow: 0 0 8px rgba(0, 243, 255, 0.6); }
+.pink { color: #ff007f; text-shadow: 0 0 8px rgba(255, 0, 127, 0.6); }
+.hidden { display: none !important; }
+
+/* Верхняя панель HUD */
+.hud {
+  width: 100%;
+  max-width: 600px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 243, 255, 0.25);
+  border-radius: 14px;
+  padding: 10px 14px;
+  margin-bottom: 8px;
+  gap: 8px;
+}
+
+.hud-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.hud-item .label {
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: #8a99b5;
+}
+
+.hud-item .value {
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.combo-badge {
+  position: absolute;
+  top: -6px;
+  right: -22px;
+  background: #ffd700;
+  color: #000;
+  font-size: 11px;
+  font-weight: 900;
+  padding: 1px 5px;
+  border-radius: 6px;
+  box-shadow: 0 0 10px #ffd700;
+}
+
+.hud-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.icon-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-size: 18px;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.icon-btn:hover {
+  border-color: #00f3ff;
+  box-shadow: 0 0 12px rgba(0, 243, 255, 0.4);
+}
+
+/* Индикаторы комбо и замедления */
+.bars-wrapper {
+  width: 100%;
+  max-width: 600px;
+  margin-bottom: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bar-track {
+  width: 100%;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  width: 0%;
+  transition: width 0.1s linear;
+}
+
+.combo-fill {
+  background: linear-gradient(90deg, #00f3ff, #ffd700);
+  box-shadow: 0 0 8px #ffd700;
+}
+
+.status-pill {
+  text-align: center;
+  font-size: 12px;
+  font-weight: bold;
+  color: #00f3ff;
+  letter-spacing: 1px;
+  animation: pulse 1s infinite alternate;
+}
+
+@keyframes pulse {
+  from { opacity: 0.6; }
+  to { opacity: 1; }
+}
+
+/* Контейнер игры и Canvas */
+.game-container {
+  position: relative;
+  width: 100%;
+  max-width: 600px;
+  aspect-ratio: 1 / 1;
+}
+
+canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  background: #080b16;
+  border: 2px solid #00f3ff;
+  border-radius: 16px;
+  box-shadow: 0 0 25px rgba(0, 243, 255, 0.2);
+}
+
+/* Всплывающие карточки (Меню, Конец игры, Лидерборд) */
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(6, 8, 17, 0.86);
+  backdrop-filter: blur(8px);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 10;
+}
+
+.card {
+  width: 100%;
+  max-width: 390px;
+  background: rgba(18, 24, 46, 0.95);
+  border: 1px solid rgba(0, 243, 255, 0.35);
+  border-radius: 18px;
+  padding: 22px;
+  text-align: center;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.7);
+}
+
+.neon-title {
+  font-size: 32px;
+  letter-spacing: 2px;
+  color: #00f3ff;
+  text-shadow: 0 0 15px rgba(0, 243, 255, 0.7);
+  margin-bottom: 6px;
+}
+
+.neon-title span {
+  color: #ff007f;
+  text-shadow: 0 0 15px rgba(255, 0, 127, 0.7);
+}
+
+.subtitle {
+  font-size: 13px;
+  color: #a0aec0;
+  margin-bottom: 16px;
+}
+
+.input-group {
+  text-align: left;
+  margin-bottom: 14px;
+}
+
+.input-group label {
+  display: block;
+  font-size: 12px;
+  color: #8a99b5;
+  margin-bottom: 5px;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #00f3ff;
+  background: rgba(0, 0, 0, 0.4);
+  color: #fff;
+  font-size: 16px;
+  outline: none;
+}
+
+.color-picker {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  font-size: 13px;
+  color: #cbd5e0;
+}
+
+.swatches {
+  display: flex;
+  gap: 8px;
+}
+
+.swatch {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--c);
+  border: 2px solid transparent;
+  cursor: pointer;
+  box-shadow: 0 0 8px var(--c);
+  transition: transform 0.15s;
+}
+
+.swatch.active {
+  transform: scale(1.2);
+  border-color: #fff;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  font-size: 11px;
+  color: #cbd5e0;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 8px;
+  border-radius: 10px;
+  margin-bottom: 16px;
+}
+
+.primary-btn, .secondary-btn {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  transition: 0.2s;
+}
+
+.primary-btn {
+  background: linear-gradient(90deg, #00f3ff, #0099ff);
+  color: #050814;
+  box-shadow: 0 0 15px rgba(0, 243, 255, 0.5);
+  margin-bottom: 8px;
+}
+
+.primary-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 22px rgba(0, 243, 255, 0.8);
+}
+
+.secondary-btn {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.gameover-title {
+  color: #ff007f;
+  text-shadow: 0 0 12px rgba(255, 0, 127, 0.7);
+  margin-bottom: 10px;
+}
+
+.final-stats {
+  font-size: 16px;
+  line-height: 1.6;
+  margin-bottom: 10px;
+}
+
+.save-status {
+  font-size: 12px;
+  color: #39ff14;
+  margin-bottom: 14px;
+}
+
+/* Таблица лидеров */
+.leaderboard-card {
+  max-width: 420px;
+  max-height: 90%;
+  display: flex;
+  flex-direction: column;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.leaderboard-list {
+  overflow-y: auto;
+  max-height: 310px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.leader-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.leader-row.top-1 { border: 1px solid #ffd700; background: rgba(255, 215, 0, 0.12); }
+.leader-row.top-2 { border: 1px solid #c0c0c0; background: rgba(192, 192, 192, 0.1); }
+.leader-row.top-3 { border: 1px solid #cd7f32; background: rgba(205, 127, 50, 0.1); }
+
+/* Сенсорное управление: СКРЫТО на ПК, ВИДНО только на тачскринах */
+.mobile-controls {
+  display: none;
+  width: 100%;
+  max-width: 600px;
+  margin-top: 12px;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 10px;
+}
+
+@media (pointer: coarse) {
+  .mobile-controls {
+    display: flex;
+  }
+}
+
+.dpad {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.dpad-row {
+  display: flex;
+  gap: 6px;
+}
+
+.dpad-btn {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  background: rgba(0, 243, 255, 0.12);
+  border: 1px solid rgba(0, 243, 255, 0.4);
+  color: #00f3ff;
+  font-size: 22px;
+}
+
+.dpad-btn:active {
+  background: rgba(0, 243, 255, 0.35);
+}
+
+.boost-btn {
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  background: rgba(255, 0, 127, 0.18);
+  border: 2px solid #ff007f;
+  color: #fff;
+  font-weight: bold;
+  font-size: 13px;
+  box-shadow: 0 0 15px rgba(255, 0, 127, 0.4);
+}
+
+.boost-btn:active {
+  background: rgba(255, 0, 127, 0.45);
+}

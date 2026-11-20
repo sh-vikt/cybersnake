@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>CyberSnake Online — Неоновая Аркада</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Верхняя панель статуса -->
+  <header class="hud">
+    <div class="hud-item">
+      <span class="label">ИГРОК</span>
+      <span id="hud-name" class="value cyan">Гость</span>
+    </div>
+    <div class="hud-item">
+      <span class="label">СЧЁТ</span>
+      <span id="hud-score" class="value">0</span>
+      <span id="hud-combo" class="combo-badge hidden">x2</span>
+    </div>
+    <div class="hud-item">
+      <span class="label">УРОВЕНЬ</span>
+      <span id="hud-level" class="value pink">1</span>
+    </div>
+    <div class="hud-item">
+      <span class="label">ЩИТЫ</span>
+      <span id="hud-lives" class="value hearts">❤️❤️❤️</span>
+    </div>
+    <div class="hud-actions">
+      <button id="btn-music" class="icon-btn" title="Музыка">🎵</button>
+      <button id="btn-leaderboard" class="icon-btn" title="Таблица лидеров">🏆</button>
+    </div>
+  </header>
+
+  <!-- Полоска таймера комбо и активных бонусов -->
+  <div class="bars-wrapper">
+    <div class="bar-track" title="Таймер комбо">
+      <div id="combo-bar" class="bar-fill combo-fill"></div>
+    </div>
+    <div id="slow-indicator" class="status-pill hidden">❄️ ЗАМЕДЛЕНИЕ АКТИВНО</div>
+  </div>
+
+  <!-- Игровое поле -->
+  <main class="game-container">
+    <canvas id="gameCanvas" width="600" height="600"></canvas>
+
+    <!-- Стартовый экран (Ввод имени и выбор цвета) -->
+    <div id="start-modal" class="overlay">
+      <div class="card">
+        <h1 class="neon-title">CYBER<span>SNAKE</span></h1>
+        <p class="subtitle">Уворачивайся от шипов, собирай монеты и ставь рекорды!</p>
+        
+        <div class="input-group">
+          <label for="player-name">Твой никнейм:</label>
+          <input type="text" id="player-name" maxlength="14" placeholder="Например: Neo_Vik" autocomplete="off">
+        </div>
+
+        <div class="color-picker">
+          <span>Цвет змейки:</span>
+          <div class="swatches">
+            <button class="swatch active" data-color="#00f3ff" style="--c: #00f3ff"></button>
+            <button class="swatch" data-color="#ff007f" style="--c: #ff007f"></button>
+            <button class="swatch" data-color="#39ff14" style="--c: #39ff14"></button>
+            <button class="swatch" data-color="#ffd700" style="--c: #ffd700"></button>
+          </div>
+        </div>
+
+        <div class="legend">
+          <span>🍎 +10</span>
+          <span>🪙 +30</span>
+          <span>🛡️ +1 жизнь</span>
+          <span>❄️ Замедление</span>
+          <span>💀 -1 жизнь</span>
+        </div>
+
+        <button id="btn-start" class="primary-btn">ИГРАТЬ</button>
+        <button id="btn-open-top" class="secondary-btn">🏆 Зал славы (Топ-10)</button>
+      </div>
+    </div>
+
+    <!-- Экран проигрыша -->
+    <div id="gameover-modal" class="overlay hidden">
+      <div class="card">
+        <h2 class="gameover-title">СИСТЕМА ОТКЛЮЧЕНА</h2>
+        <p class="final-stats">
+          Игрок: <strong id="end-name"></strong><br>
+          Счёт: <strong id="end-score" class="cyan">0</strong> | Уровень: <strong id="end-level" class="pink">1</strong>
+        </p>
+        <p id="save-status" class="save-status">Сохраняем рекорд в облако...</p>
+        <button id="btn-restart" class="primary-btn">ИГРАТЬ СНОВА</button>
+        <button id="btn-end-top" class="secondary-btn">🏆 Посмотреть рейтинг</button>
+      </div>
+    </div>
+
+    <!-- Таблица лидеров (Облачный Топ-10) -->
+    <div id="leaderboard-modal" class="overlay hidden">
+      <div class="card leaderboard-card">
+        <div class="card-header">
+          <h2>🏆 ЗАЛ СЛАВЫ</h2>
+          <button id="btn-close-top" class="close-btn">✕</button>
+        </div>
+        <div id="leaderboard-list" class="leaderboard-list">
+          <p class="loading-text">Загрузка рекордов из облака...</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Сенсорное управление (появляется ТОЛЬКО на телефонах и планшетах) -->
+  <div id="mobile-controls" class="mobile-controls">
+    <div class="dpad">
+      <button class="dpad-btn up" data-dir="UP">▲</button>
+      <div class="dpad-row">
+        <button class="dpad-btn left" data-dir="LEFT">◀</button>
+        <button class="dpad-btn down" data-dir="DOWN">▼</button>
+        <button class="dpad-btn right" data-dir="RIGHT">▶</button>
+      </div>
+    </div>
+    <button id="btn-boost" class="boost-btn">⚡<br>РЫВОК</button>
+  </div>
+
+  <!-- Подключение Firebase (Облачная база данных) -->
+  <script type="module" src="game.js"></script>
+</body>
+</html>
