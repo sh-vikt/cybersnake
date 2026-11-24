@@ -102,6 +102,7 @@ let spikes = [];
 let portals = [];
 let worldPortal = null;
 let currentWorld = 1;
+let worldTransitionFlash = 0;
 
 let score = 0;
 let level = 1;
@@ -117,7 +118,7 @@ let gameLoopTimeout = null;
 let animFrame = 0;
 let floatingTexts = [];
 function addFloatingText(x, y, text, color = "#fff") {
-  floatingTexts.push({ x: x * gridSize + 10, y: y * gridSize, text, color, life: 22 });
+  floatingTexts.push({ x: x * gridSize + 10, y: y * gridSize, text, color, life: 24 });
 }
 
 function isCellOccupied(x, y) {
@@ -173,9 +174,11 @@ function generateWallsForLevel(lvl) {
   }
 
   if (currentWorld === 2) {
-    for (let i = 13; i <= 16; i++) {
-      if (isSafeFromHead(i, 15)) walls.push({ x: i, y: 15 });
-      if (isSafeFromHead(15, i)) walls.push({ x: 15, y: i });
+    for (let i = 12; i <= 17; i++) {
+      if (i !== 14 && i !== 15) {
+        if (isSafeFromHead(i, 15)) walls.push({ x: i, y: 15 });
+        if (isSafeFromHead(15, i)) walls.push({ x: 15, y: i });
+      }
     }
   }
 }
@@ -214,10 +217,11 @@ function setupLevelObjects() {
 function enterWorld2() {
   currentWorld = 2;
   worldPortal = null;
+  worldTransitionFlash = 18;
   document.body.classList.add("world-2");
-  invulnTimer = 25;
+  invulnTimer = 28;
   score += 100;
-  addFloatingText(snake[0].x, snake[0].y, "МИР 2: КИБЕР-ЯДРО! +100", "#ffd700");
+  addFloatingText(snake[0].x, snake[0].y, "⚡ ДОБРО ПОЖАЛОВАТЬ В МИР 2! +100 ⚡", "#ffd700");
   playTone(523.25, "triangle", 0.15, 0.25);
   setTimeout(() => playTone(659.25, "triangle", 0.15, 0.25), 120);
   setTimeout(() => playTone(1046.5, "sine", 0.35, 0.3), 240);
@@ -237,7 +241,7 @@ function spawnBonus() {
 
 function updateHUD() {
   hudScore.textContent = score;
-  hudLevel.textContent = currentWorld === 2 ? `${level} (М2)` : level;
+  hudLevel.textContent = currentWorld === 2 ? `${level} 🌌 МИР 2` : level;
   hudLives.textContent = "❤️".repeat(Math.max(0, lives));
 
   if (combo > 1) {
@@ -279,7 +283,7 @@ function stepGame() {
   dx = nextDx;
   dy = nextDy;
 
-  let head = { x: snake[0].x + dx, y: snake[0].y + dy };
+  let head = { x: snake.x + dx, y: snake.y + dy };
   if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount) {
     takeDamage("СТЕНА!");
     if (!gameRunning) return;
@@ -295,30 +299,29 @@ function stepGame() {
   }
 
   if (portals.length === 2) {
-    if (head.x === portals[0].x && head.y === portals[0].y) {
-      head = { x: portals[1].x + dx, y: portals[1].y + dy };
-      addFloatingText(head.x, head.y, "ТЕЛЕПОРТ!", "#00f3ff");
+    if (head.x === portals.x && head.y === portals.y) {
+      head = { x: portals.x + dx, y: portals.y + dy };
       playTone(660, "sine", 0.15, 0.2);
-    } else if (head.x === portals[1].x && head.y === portals[1].y) {
-      head = { x: portals[0].x + dx, y: portals[0].y + dy };
-      addFloatingText(head.x, head.y, "ТЕЛЕПОРТ!", "#ff007f");
+    } else if (head.x === portals.x && head.y === portals.y) {
+      head = { x: portals.x + dx, y: portals.y + dy };
       playTone(660, "sine", 0.15, 0.2);
     }
     head.x = Math.max(0, Math.min(tileCount - 1, head.x));
     head.y = Math.max(0, Math.min(tileCount - 1, head.y));
   }
 
+  const hitSpikeBefore = spikes.some(sp => sp.x === head.x && sp.y === head.y);
   spikes.forEach(sp => {
     sp.x += sp.dir;
     if (sp.x <= 1 || sp.x >= tileCount - 2) sp.dir *= -1;
   });
+  const hitSpikeAfter = spikes.some(sp => sp.x === head.x && sp.y === head.y);
 
   const hitSelf = snake.some((seg, i) => i > 0 && seg.x === head.x && seg.y === head.y);
   const hitWall = walls.some(w => w.x === head.x && w.y === head.y);
-  const hitSpikeHead = spikes.some(sp => sp.x === head.x && sp.y === head.y);
 
-  if (hitSelf || hitWall || hitSpikeHead) {
-    takeDamage(hitSpikeHead ? "ШИП!" : "УДАР!");
+  if (hitSelf || hitWall || hitSpikeBefore || hitSpikeAfter) {
+    takeDamage((hitSpikeBefore || hitSpikeAfter) ? "ШИП!" : "УДАР!");
     if (!gameRunning) return;
   }
 
@@ -412,7 +415,6 @@ function scheduleNextStep() {
   if (isBoosting) baseSpeed = Math.max(42, baseSpeed * 0.55);
   gameLoopTimeout = setTimeout(stepGame, baseSpeed);
 }
-
 function drawRoundedCell(x, y, w, h, r) {
   ctx.beginPath();
   ctx.moveTo(x + r, y);
@@ -430,10 +432,18 @@ function drawRoundedCell(x, y, w, h, r) {
 
 function draw() {
   animFrame++;
-  ctx.fillStyle = currentWorld === 2 ? "#0d0618" : "#080b16";
+
+  if (currentWorld === 2) {
+    const grad = ctx.createRadialGradient(canvas.width / 2, canvas.height / 2, 30, canvas.width / 2, canvas.height / 2, 360);
+    grad.addColorStop(0, "#1f0836");
+    grad.addColorStop(1, "#090212");
+    ctx.fillStyle = grad;
+  } else {
+    ctx.fillStyle = "#080b16";
+  }
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  ctx.strokeStyle = currentWorld === 2 ? "rgba(217, 70, 239, 0.09)" : "rgba(0, 243, 255, 0.06)";
+  ctx.strokeStyle = currentWorld === 2 ? "rgba(217, 70, 239, 0.16)" : "rgba(0, 243, 255, 0.06)";
   ctx.lineWidth = 1;
   for (let i = 0; i <= tileCount; i++) {
     ctx.beginPath();
@@ -446,13 +456,32 @@ function draw() {
     ctx.stroke();
   }
 
+  if (currentWorld === 2) {
+    ctx.fillStyle = "rgba(255, 215, 0, 0.18)";
+    for (let x = 3; x < tileCount; x += 4) {
+      for (let y = 3; y < tileCount; y += 4) {
+        ctx.fillRect(x * gridSize - 1, y * gridSize - 1, 3, 3);
+      }
+    }
+    ctx.save();
+    ctx.translate(canvas.width / 2, canvas.height / 2);
+    ctx.rotate(animFrame * 0.03);
+    ctx.strokeStyle = "rgba(217, 70, 239, 0.35)";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(-14, -14, 28, 28);
+    ctx.rotate(Math.PI / 4);
+    ctx.strokeStyle = "rgba(255, 215, 0, 0.35)";
+    ctx.strokeRect(-14, -14, 28, 28);
+    ctx.restore();
+  }
+
   if (portals.length === 2) {
     ctx.save();
-    ctx.strokeStyle = "rgba(0, 243, 255, 0.14)";
-    ctx.setLineDash([4, 6]);
+    ctx.strokeStyle = "rgba(0, 243, 255, 0.12)";
+    ctx.setLineDash();
     ctx.beginPath();
-    ctx.moveTo(portals[0].x * gridSize + gridSize / 2, portals[0].y * gridSize + gridSize / 2);
-    ctx.lineTo(portals[1].x * gridSize + gridSize / 2, portals[1].y * gridSize + gridSize / 2);
+    ctx.moveTo(portals.x * gridSize + gridSize / 2, portals.y * gridSize + gridSize / 2);
+    ctx.lineTo(portals.x * gridSize + gridSize / 2, portals.y * gridSize + gridSize / 2);
     ctx.stroke();
     ctx.restore();
   }
@@ -464,7 +493,7 @@ function draw() {
     const color = idx === 0 ? "#00f3ff" : "#ff007f";
     const pulse = Math.sin(animFrame * 0.25) * 3;
 
-    ctx.fillStyle = idx === 0 ? "rgba(0, 243, 255, 0.22)" : "rgba(255, 0, 127, 0.22)";
+    ctx.fillStyle = idx === 0 ? "rgba(0, 243, 255, 0.25)" : "rgba(255, 0, 127, 0.25)";
     ctx.beginPath();
     ctx.arc(cx, cy, gridSize * 0.8 + pulse, 0, Math.PI * 2);
     ctx.fill();
@@ -479,13 +508,6 @@ function draw() {
     ctx.rotate(Math.PI / 4);
     ctx.strokeRect(-gridSize * 0.45, -gridSize * 0.45, gridSize * 0.9, gridSize * 0.9);
     ctx.restore();
-
-    ctx.save();
-    ctx.fillStyle = "#fff";
-    ctx.font = "bold 9px sans-serif";
-    ctx.textAlign = "center";
-    ctx.fillText("ТП", cx, p.y * gridSize - 4);
-    ctx.restore();
   });
 
   if (worldPortal) {
@@ -496,10 +518,10 @@ function draw() {
     const pulse = Math.sin(animFrame * 0.25) * 4;
     ctx.strokeStyle = "#d946ef";
     ctx.lineWidth = 4;
-    ctx.shadowBlur = 20;
+    ctx.shadowBlur = 22;
     ctx.shadowColor = "#d946ef";
     ctx.strokeRect(px - pulse / 2, py - pulse / 2, size + pulse, size + pulse);
-    ctx.fillStyle = "rgba(217, 70, 239, 0.25)";
+    ctx.fillStyle = "rgba(217, 70, 239, 0.28)";
     ctx.fillRect(px, py, size, size);
     ctx.fillStyle = "#fff";
     ctx.font = "bold 10px sans-serif";
@@ -553,12 +575,26 @@ function draw() {
   snake.forEach((seg, idx) => {
     ctx.save();
     if (invulnTimer > 0 && animFrame % 2 === 0) ctx.globalAlpha = 0.45;
-    ctx.fillStyle = idx === 0 ? "#ffffff" : snakeColor;
-    ctx.shadowBlur = idx === 0 ? 16 : 8;
-    ctx.shadowColor = snakeColor;
+    if (currentWorld === 2) {
+      ctx.fillStyle = idx === 0 ? "#ffd700" : (idx % 2 === 0 ? "#d946ef" : snakeColor);
+      ctx.shadowBlur = idx === 0 ? 18 : 10;
+      ctx.shadowColor = "#d946ef";
+    } else {
+      ctx.fillStyle = idx === 0 ? "#ffffff" : snakeColor;
+      ctx.shadowBlur = idx === 0 ? 16 : 8;
+      ctx.shadowColor = snakeColor;
+    }
     drawRoundedCell(seg.x * gridSize + 1, seg.y * gridSize + 1, gridSize - 2, gridSize - 2, idx === 0 ? 6 : 4);
     ctx.restore();
   });
+
+  if (worldTransitionFlash > 0) {
+    ctx.save();
+    ctx.fillStyle = `rgba(217, 70, 239, ${worldTransitionFlash / 25})`;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    worldTransitionFlash--;
+    ctx.restore();
+  }
 
   floatingTexts.forEach((ft, i) => {
     ctx.save();
@@ -604,23 +640,23 @@ document.querySelectorAll(".dpad-btn").forEach(btn => {
 let touchStartX = 0, touchStartY = 0;
 canvas.addEventListener("touchstart", (e) => {
   if (e.touches.length > 0) {
-    touchStartX = e.touches[0].clientX;
-    touchStartY = e.touches[0].clientY;
+    touchStartX = e.touches.clientX;
+    touchStartY = e.touches.clientY;
   }
 }, { passive: true });
 
 canvas.addEventListener("touchmove", (e) => {
   if (!gameRunning || e.touches.length === 0) return;
-  const diffX = e.touches[0].clientX - touchStartX;
-  const diffY = e.touches[0].clientY - touchStartY;
+  const diffX = e.touches.clientX - touchStartX;
+  const diffY = e.touches.clientY - touchStartY;
   if (Math.abs(diffX) > 22 || Math.abs(diffY) > 22) {
     if (Math.abs(diffX) > Math.abs(diffY)) {
       setDirection(diffX > 0 ? "RIGHT" : "LEFT");
     } else {
       setDirection(diffY > 0 ? "DOWN" : "UP");
     }
-    touchStartX = e.touches[0].clientX;
-    touchStartY = e.touches[0].clientY;
+    touchStartX = e.touches.clientX;
+    touchStartY = e.touches.clientY;
   }
 }, { passive: true });
 
@@ -650,6 +686,7 @@ function startGame() {
   invulnTimer = 0;
   currentWorld = 1;
   worldPortal = null;
+  worldTransitionFlash = 0;
   bonus = null;
   walls = [];
   spikes = [];
@@ -670,8 +707,7 @@ function startGame() {
   draw();
   scheduleNextStep();
 }
-
-async function fetchWithTimeout(url, options = {}, timeoutMs = 5000) {
+async function fetchWithTimeout(url, options = {}, timeoutMs = 6000) {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeoutMs);
   try {
@@ -703,17 +739,18 @@ async function saveScore(name, finalScore, finalLevel) {
         "Prefer": "return=minimal"
       },
       body: JSON.stringify({ name, score: finalScore, level: finalLevel })
-    }, 5000);
+    }, 6000);
 
     if (res.ok) {
       statusEl.textContent = "✅ Рекорд сохранён в облачный Топ-10!";
       statusEl.style.color = "#39ff14";
     } else {
-      statusEl.textContent = "⚠️ База отклонила запись (код " + res.status + ")";
+      const errText = await res.text().catch(() => "");
+      statusEl.textContent = `⚠️ Ошибка базы (${res.status}): ${errText.slice(0, 40)}`;
       statusEl.style.color = "#ff007f";
     }
   } catch (err) {
-    statusEl.textContent = "📱 Сохранено локально (облако недоступно)";
+    statusEl.textContent = `📱 Локально (${err.name === "AbortError" ? "тайм-аут сети" : err.message})`;
     statusEl.style.color = "#ffd700";
   }
 }
@@ -728,7 +765,7 @@ async function openLeaderboard() {
   try {
     const res = await fetchWithTimeout(`${SUPABASE_URL}?select=name,score,level&order=score.desc&limit=10`, {
       headers: { "apikey": SUPABASE_KEY }
-    }, 5000);
+    }, 6000);
     if (res.ok) {
       const cloudRows = await res.json();
       if (Array.isArray(cloudRows) && cloudRows.length > 0) {
