@@ -83,9 +83,9 @@ body.world-2 {
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.2);
   color: #fff;
-  font-size: 18px;
-  width: 38px;
-  height: 38px;
+  font-size: 17px;
+  width: 36px;
+  height: 36px;
   border-radius: 10px;
   cursor: pointer;
   transition: 0.2s;
@@ -99,7 +99,11 @@ body.world-2 {
 .bars-wrapper {
   width: 100%;
   max-width: 600px;
-  margin-bottom: 8px; height: 24px; display: flex; flex-direction: column; gap: 4px;
+  margin-bottom: 8px;
+  height: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .bar-track {
@@ -113,7 +117,7 @@ body.world-2 {
 .bar-fill {
   height: 100%;
   width: 0%;
-  transition: width 0.1s linear;
+  transition: width 0.08s linear;
 }
 
 .combo-fill {
@@ -127,12 +131,11 @@ body.world-2 {
   font-weight: bold;
   color: #00f3ff;
   letter-spacing: 1px;
-  animation: pulse 1s infinite alternate;
 }
 
-@keyframes pulse {
-  from { opacity: 0.6; }
-  to { opacity: 1; }
+#slow-indicator.hidden {
+  display: block !important;
+  visibility: hidden;
 }
 
 .game-container {
@@ -160,33 +163,33 @@ body.world-2 canvas {
 .overlay {
   position: absolute;
   inset: 0;
-  background: rgba(6, 8, 17, 0.86);
+  background: rgba(6, 8, 17, 0.88);
   backdrop-filter: blur(8px);
   border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 16px;
+  padding: 14px;
   z-index: 10;
 }
 
 .card {
   width: 100%;
-  max-width: 390px;
-  background: rgba(18, 24, 46, 0.95);
+  max-width: 410px;
+  background: rgba(18, 24, 46, 0.96);
   border: 1px solid rgba(0, 243, 255, 0.35);
   border-radius: 18px;
-  padding: 22px;
+  padding: 18px;
   text-align: center;
   box-shadow: 0 0 30px rgba(0, 0, 0, 0.7);
 }
 
 .neon-title {
-  font-size: 32px;
+  font-size: 30px;
   letter-spacing: 2px;
   color: #00f3ff;
   text-shadow: 0 0 15px rgba(0, 243, 255, 0.7);
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 
 .neon-title span {
@@ -195,31 +198,31 @@ body.world-2 canvas {
 }
 
 .subtitle {
-  font-size: 13px;
+  font-size: 12px;
   color: #a0aec0;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .input-group {
   text-align: left;
-  margin-bottom: 14px;
+  margin-bottom: 10px;
 }
 
 .input-group label {
   display: block;
   font-size: 12px;
   color: #8a99b5;
-  margin-bottom: 5px;
+  margin-bottom: 4px;
 }
 
 .input-group input {
   width: 100%;
-  padding: 10px 12px;
+  padding: 9px 12px;
   border-radius: 10px;
   border: 1px solid #00f3ff;
   background: rgba(0, 0, 0, 0.4);
   color: #fff;
-  font-size: 16px;
+  font-size: 15px;
   outline: none;
 }
 
@@ -227,7 +230,7 @@ body.world-2 canvas {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 14px;
+  margin-bottom: 10px;
   font-size: 13px;
   color: #cbd5e0;
 }
@@ -238,8 +241,8 @@ body.world-2 canvas {
 }
 
 .swatch {
-  width: 26px;
-  height: 26px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   background: var(--c);
   border: 2px solid transparent;
@@ -257,18 +260,39 @@ body.world-2 canvas {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 8px;
+  gap: 6px;
   font-size: 11px;
   color: #cbd5e0;
   background: rgba(255, 255, 255, 0.04);
-  padding: 8px;
+  padding: 7px;
   border-radius: 10px;
-  margin-bottom: 16px;
+  margin-bottom: 10px;
+}
+
+.pc-controls-hint {
+  background: rgba(0, 243, 255, 0.07);
+  border: 1px solid rgba(0, 243, 255, 0.22);
+  border-radius: 10px;
+  padding: 7px 10px;
+  font-size: 11px;
+  line-height: 1.45;
+  color: #cbd5e0;
+  margin-bottom: 12px;
+}
+
+.pc-controls-hint b {
+  color: #00f3ff;
+}
+
+@media (pointer: coarse) {
+  .pc-controls-hint {
+    display: none;
+  }
 }
 
 .primary-btn, .secondary-btn {
   width: 100%;
-  padding: 12px;
+  padding: 11px;
   border-radius: 10px;
   font-size: 15px;
   font-weight: 700;
@@ -282,11 +306,6 @@ body.world-2 canvas {
   color: #050814;
   box-shadow: 0 0 15px rgba(0, 243, 255, 0.5);
   margin-bottom: 8px;
-}
-
-.primary-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 0 22px rgba(0, 243, 255, 0.8);
 }
 
 .secondary-btn {
@@ -357,14 +376,15 @@ body.world-2 canvas {
 .leader-row.top-2 { border: 1px solid #c0c0c0; background: rgba(192, 192, 192, 0.1); }
 .leader-row.top-3 { border: 1px solid #cd7f32; background: rgba(205, 127, 50, 0.1); }
 
+/* Крупные сенсорные кнопки для комфортной игры */
 .mobile-controls {
   display: none;
   width: 100%;
   max-width: 600px;
-  margin-top: 18px;
+  margin-top: 20px;
   justify-content: space-between;
   align-items: center;
-  padding: 0 12px;
+  padding: 0 8px;
 }
 
 @media (pointer: coarse) {
@@ -377,35 +397,42 @@ body.world-2 canvas {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
+  gap: 18px;
 }
 
 .dpad-row {
   display: flex;
-  gap: 18px;
+  gap: 20px;
 }
 
 .dpad-btn {
-  width: 62px;
-  height: 62px;
-  border-radius: 16px;
-  background: rgba(0, 243, 255, 0.14);
-  border: 2px solid rgba(0, 243, 255, 0.45);
+  width: 74px;
+  height: 74px;
+  border-radius: 18px;
+  background: rgba(0, 243, 255, 0.16);
+  border: 2px solid rgba(0, 243, 255, 0.5);
   color: #00f3ff;
-  font-size: 24px;
+  font-size: 28px;
   touch-action: manipulation;
 }
 
 .dpad-btn:active {
-  background: rgba(0, 243, 255, 0.4);
+  background: rgba(0, 243, 255, 0.42);
   transform: scale(0.95);
 }
 
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
 .boost-btn {
-  width: 88px;
-  height: 88px;
+  width: 92px;
+  height: 92px;
   border-radius: 50%;
-  background: rgba(255, 0, 127, 0.2);
+  background: rgba(255, 0, 127, 0.22);
   border: 2px solid #ff007f;
   color: #fff;
   font-weight: bold;
@@ -419,4 +446,20 @@ body.world-2 canvas {
   transform: scale(0.95);
 }
 
-#slow-indicator.hidden { display: block !important; visibility: hidden; }
+.fire-btn {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  background: rgba(255, 215, 0, 0.22);
+  border: 2px solid #ffd700;
+  color: #ffd700;
+  font-weight: bold;
+  font-size: 15px;
+  box-shadow: 0 0 16px rgba(255, 215, 0, 0.45);
+  touch-action: manipulation;
+}
+
+.fire-btn:active {
+  background: rgba(255, 215, 0, 0.5);
+  transform: scale(0.95);
+}

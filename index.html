@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>CyberSnake Online — Неоновая Аркада</title>
-  <link rel="stylesheet" href="style.css?v=9">
+  <link rel="stylesheet" href="style.css?v=10">
 </head>
 <body>
 
@@ -23,10 +23,11 @@
       <span id="hud-level" class="value pink">1</span>
     </div>
     <div class="hud-item">
-      <span class="label">ЩИТЫ</span>
+      <span class="label">ЖИЗНИ</span>
       <span id="hud-lives" class="value hearts">❤️❤️❤️</span>
     </div>
     <div class="hud-actions">
+      <button id="btn-pause" class="icon-btn" title="Пауза (P / Esc)">⏸️</button>
       <button id="btn-music" class="icon-btn" title="Музыка">🎵</button>
       <button id="btn-leaderboard" class="icon-btn" title="Таблица лидеров">🏆</button>
     </div>
@@ -64,14 +65,29 @@
         <div class="legend">
           <span>🍎 +10</span>
           <span>🪙 +30</span>
-          <span>🛡️ +1 жизнь</span>
-          <span>❄️ Замедление</span>
+          <span>❤️ +1 жизнь</span>
+          <span>🛡️ Броня</span>
+          <span>🔫 Пушка</span>
           <span>🧲 Магнит</span>
-          <span>💀 -1 жизнь</span>
+          <span>❄️ Замедл.</span>
+        </div>
+
+        <div class="pc-controls-hint">
+          <div><strong>Управление на ПК:</strong></div>
+          <div>⬆️⬇️⬅️➡️ / <b>WASD (ЦФЫВ)</b> — Поворот &nbsp;|&nbsp; <b>Пробел</b> — Рывок</div>
+          <div><b>F / Enter</b> — Выстрел по шипам &nbsp;|&nbsp; <b>P / Esc</b> — Пауза</div>
         </div>
 
         <button id="btn-start" class="primary-btn">ИГРАТЬ</button>
         <button id="btn-open-top" class="secondary-btn">🏆 Зал славы (Топ-10)</button>
+      </div>
+    </div>
+
+    <div id="pause-modal" class="overlay hidden">
+      <div class="card">
+        <h2 class="neon-title" style="font-size: 26px;">ПАУЗА</h2>
+        <p class="subtitle">Игра приостановлена</p>
+        <button id="btn-resume" class="primary-btn">ПРОДОЛЖИТЬ</button>
       </div>
     </div>
 
@@ -110,9 +126,12 @@
         <button class="dpad-btn right" data-dir="RIGHT">▶</button>
       </div>
     </div>
-    <button id="btn-boost" class="boost-btn">⚡<br>РЫВОК</button>
+    <div class="action-buttons">
+      <button id="btn-fire" class="fire-btn hidden">🔫<br><span id="mobile-ammo">5</span></button>
+      <button id="btn-boost" class="boost-btn">⚡<br>РЫВОК</button>
+    </div>
   </div>
 
-  <script src="game.js?v=9"></script>
+  <script src="game.js?v=10"></script>
 </body>
 </html>
