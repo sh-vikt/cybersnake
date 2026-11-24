@@ -552,11 +552,36 @@ function draw() {
 
   if (bonus) {
     ctx.save();
-    ctx.font = "16px sans-serif";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    const icons = { coin: "🪙", shield: "🛡️", slow: "❄️", bomb: "💀", magnet: "🧲", energy: "⚡" };
-    ctx.fillText(icons[bonus.type] || "⭐", bonus.x * gridSize + gridSize / 2, bonus.y * gridSize + gridSize / 2 + 1);
+    const bx = bonus.x * gridSize + gridSize / 2;
+    const by = bonus.y * gridSize + gridSize / 2;
+    if (bonus.type === "coin") {
+      const r = gridSize * 0.44 + Math.sin(animFrame * 0.25) * 0.8;
+      const grad = ctx.createRadialGradient(bx - 3, by - 3, 1, bx, by, r);
+      grad.addColorStop(0, "#fff7b2");
+      grad.addColorStop(0.5, "#ffd700");
+      grad.addColorStop(1, "#b8860b");
+      ctx.fillStyle = grad;
+      ctx.shadowBlur = 14;
+      ctx.shadowColor = "#ffd700";
+      ctx.beginPath();
+      ctx.arc(bx, by, r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#fff";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = "#4a3200";
+      ctx.font = "bold 12px sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("$", bx, by + 1);
+    } else {
+      ctx.font = "16px sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      const icons = { shield: "🛡️", slow: "❄️", bomb: "💀", magnet: "🧲", energy: "⚡" };
+      ctx.fillText(icons[bonus.type] || "⭐", bx, by + 1);
+    }
     ctx.restore();
   }
 

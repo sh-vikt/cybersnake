@@ -1,4 +1,4 @@
-﻿* {
+* {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -99,10 +99,7 @@ body.world-2 {
 .bars-wrapper {
   width: 100%;
   max-width: 600px;
-  margin-bottom: 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  margin-bottom: 8px; height: 24px; display: flex; flex-direction: column; gap: 4px;
 }
 
 .bar-track {
@@ -421,3 +418,5 @@ body.world-2 canvas {
   background: rgba(255, 0, 127, 0.5);
   transform: scale(0.95);
 }
+
+#slow-indicator.hidden { display: block !important; visibility: hidden; }
