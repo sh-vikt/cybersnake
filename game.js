@@ -1,4 +1,4 @@
-﻿const SUPABASE_URL = "https://supabase.co";
+const SUPABASE_URL = "https://supabase.co";
 const SUPABASE_KEY = "sb_publishable_UL-vGDHR1WNwUkOAFGni0Q_W2Q_u63k";
 
 const canvas = document.getElementById("gameCanvas");
@@ -123,7 +123,7 @@ function isCellOccupied(x, y) {
   if (snake.some(s => s.x === x && s.y === y)) return true;
   if (walls.some(w => w.x === x && w.y === y)) return true;
   if (spikes.some(sp => sp.x === x && sp.y === y)) return true;
-  if (portals.some(p => p.x === x && p.y === y)) return true;
+  if (portals.some(p => Math.abs(p.x - x) <= 1 && Math.abs(p.y - y) <= 1)) return true;
   if (worldPortal && x >= worldPortal.x && x <= worldPortal.x + 1 && y >= worldPortal.y && y <= worldPortal.y + 1) return true;
   return false;
 }
@@ -134,14 +134,14 @@ function getFreeCell() {
     const y = Math.floor(Math.random() * tileCount);
     if (!isCellOccupied(x, y)) return { x, y };
   }
-  return { x: 5, y: 5 };
+  return { x: 10, y: 10 };
 }
 
 function generateWallsForLevel(lvl) {
   walls = [];
   if (lvl < 2) return;
 
-  const head = snake[0] || { x: 10, y: 15 };
+  const head = snake || { x: 10, y: 15 };
   const isSafeFromHead = (x, y) => Math.abs(x - head.x) > 3 || Math.abs(y - head.y) > 3;
   const layout = currentWorld === 1 ? ((lvl - 2) % 4) : ((lvl + 1) % 4);
 
@@ -156,14 +156,14 @@ function generateWallsForLevel(lvl) {
       if (isSafeFromHead(23, y)) walls.push({ x: 23, y });
     }
   } else if (layout === 2) {
-    for (let x = 4; x <= 13; x++) {
+    for (let x = 5; x <= 13; x++) {
       if (isSafeFromHead(x, 9)) walls.push({ x, y: 9 });
     }
-    for (let x = 16; x <= 25; x++) {
+    for (let x = 16; x <= 24; x++) {
       if (isSafeFromHead(x, 20)) walls.push({ x, y: 20 });
     }
   } else {
-    for (let i = 5; i <= 11; i++) {
+    for (let i = 6; i <= 11; i++) {
       if (isSafeFromHead(i, 6)) walls.push({ x: i, y: 6 });
       if (isSafeFromHead(29 - i, 23)) walls.push({ x: 29 - i, y: 23 });
       if (isSafeFromHead(6, i)) walls.push({ x: 6, y: i });
@@ -186,14 +186,20 @@ function setupLevelObjects() {
   if (level >= 3) {
     const spikeCount = currentWorld === 2 ? 3 : 2;
     for (let i = 0; i < spikeCount; i++) {
-      const yPos = 4 + i * 10;
-      spikes.push({ x: 4 + i * 5, y: yPos, dir: i % 2 === 0 ? 1 : -1 });
+      const yPos = 5 + i * 10;
+      spikes.push({ x: 5 + i * 5, y: yPos, dir: i % 2 === 0 ? 1 : -1 });
     }
   }
 
   portals = [];
   if (level >= 4) {
-    portals = [getFreeCell(), getFreeCell()];
+    const pTopLeft = { x: 3, y: 3 };
+    const pBottomRight = { x: tileCount - 4, y: tileCount - 4 };
+    portals = [pTopLeft, pBottomRight];
+    walls = walls.filter(w =>
+      !(Math.abs(w.x - pTopLeft.x) <= 1 && Math.abs(w.y - pTopLeft.y) <= 1) &&
+      !(Math.abs(w.x - pBottomRight.x) <= 1 && Math.abs(w.y - pBottomRight.y) <= 1)
+    );
   }
 
   if (currentWorld === 1 && score >= 400 && !worldPortal) {
@@ -210,7 +216,7 @@ function enterWorld2() {
   document.body.classList.add("world-2");
   invulnTimer = 25;
   score += 100;
-  addFloatingText(snake[0].x, snake[0].y, "МИР 2: КИБЕР-ЯДРО! +100", "#ffd700");
+  addFloatingText(snake.x, snake.y, "МИР 2: КИБЕР-ЯДРО! +100", "#ffd700");
   playTone(523.25, "triangle", 0.15, 0.25);
   setTimeout(() => playTone(659.25, "triangle", 0.15, 0.25), 120);
   setTimeout(() => playTone(1046.5, "sine", 0.35, 0.3), 240);
@@ -260,7 +266,7 @@ function takeDamage(reason) {
   comboTimer = 0;
   invulnTimer = 18;
   playTone(140, "sawtooth", 0.3, 0.25);
-  addFloatingText(snake[0].x, snake[0].y, reason, "#ff007f");
+  addFloatingText(snake.x, snake.y, reason, "#ff007f");
   updateHUD();
   if (lives <= 0) {
     endGame();
@@ -273,7 +279,7 @@ function stepGame() {
   dx = nextDx;
   dy = nextDy;
 
-  let head = { x: snake[0].x + dx, y: snake[0].y + dy };
+  let head = { x: snake.x + dx, y: snake.y + dy };
   if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount) {
     takeDamage("СТЕНА!");
     if (!gameRunning) return;
@@ -289,15 +295,17 @@ function stepGame() {
   }
 
   if (portals.length === 2) {
-    if (head.x === portals[0].x && head.y === portals[0].y) {
-      head = { x: portals[1].x + dx, y: portals[1].y + dy };
+    if (head.x === portals.x && head.y === portals.y) {
+      head = { x: portals.x + dx, y: portals.y + dy };
+      addFloatingText(head.x, head.y, "ТЕЛЕПОРТ!", "#00f3ff");
       playTone(660, "sine", 0.15, 0.2);
-    } else if (head.x === portals[1].x && head.y === portals[1].y) {
-      head = { x: portals[0].x + dx, y: portals[0].y + dy };
+    } else if (head.x === portals.x && head.y === portals.y) {
+      head = { x: portals.x + dx, y: portals.y + dy };
+      addFloatingText(head.x, head.y, "ТЕЛЕПОРТ!", "#ff007f");
       playTone(660, "sine", 0.15, 0.2);
     }
-    head.x = (head.x + tileCount) % tileCount;
-    head.y = (head.y + tileCount) % tileCount;
+    head.x = Math.max(0, Math.min(tileCount - 1, head.x));
+    head.y = Math.max(0, Math.min(tileCount - 1, head.y));
   }
 
   spikes.forEach(sp => {
@@ -437,13 +445,45 @@ function draw() {
     ctx.stroke();
   }
 
+  if (portals.length === 2) {
+    ctx.save();
+    ctx.strokeStyle = "rgba(0, 243, 255, 0.14)";
+    ctx.setLineDash([5, 5]);
+    ctx.beginPath();
+    ctx.moveTo(portals.x * gridSize + gridSize / 2, portals.y * gridSize + gridSize / 2);
+    ctx.lineTo(portals.x * gridSize + gridSize / 2, portals.y * gridSize + gridSize / 2);
+    ctx.stroke();
+    ctx.restore();
+  }
+
   portals.forEach((p, idx) => {
     ctx.save();
-    ctx.strokeStyle = idx === 0 ? "#00f3ff" : "#ff007f";
-    ctx.lineWidth = 3;
-    ctx.shadowBlur = 12;
-    ctx.shadowColor = ctx.strokeStyle;
-    ctx.strokeRect(p.x * gridSize + 2, p.y * gridSize + 2, gridSize - 4, gridSize - 4);
+    const cx = p.x * gridSize + gridSize / 2;
+    const cy = p.y * gridSize + gridSize / 2;
+    const color = idx === 0 ? "#00f3ff" : "#ff007f";
+    const pulse = Math.sin(animFrame * 0.25) * 3;
+
+    ctx.fillStyle = idx === 0 ? "rgba(0, 243, 255, 0.22)" : "rgba(255, 0, 127, 0.22)";
+    ctx.beginPath();
+    ctx.arc(cx, cy, gridSize * 0.8 + pulse, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.translate(cx, cy);
+    ctx.rotate(animFrame * 0.12 * (idx === 0 ? 1 : -1));
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2.5;
+    ctx.shadowBlur = 14;
+    ctx.shadowColor = color;
+    ctx.strokeRect(-gridSize * 0.55, -gridSize * 0.55, gridSize * 1.1, gridSize * 1.1);
+    ctx.rotate(Math.PI / 4);
+    ctx.strokeRect(-gridSize * 0.45, -gridSize * 0.45, gridSize * 0.9, gridSize * 0.9);
+    ctx.restore();
+
+    ctx.save();
+    ctx.fillStyle = "#fff";
+    ctx.font = "bold 9px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("ТП", cx, p.y * gridSize - 4);
     ctx.restore();
   });
 
@@ -489,6 +529,7 @@ function draw() {
     ctx.fill();
     ctx.restore();
   });
+
   ctx.save();
   ctx.fillStyle = "#39ff14";
   ctx.shadowBlur = 14;
@@ -530,7 +571,6 @@ function draw() {
     if (ft.life <= 0) floatingTexts.splice(i, 1);
   });
 }
-
 function setDirection(dir) {
   if (dir === "UP" && dy !== 1) { nextDx = 0; nextDy = -1; }
   if (dir === "DOWN" && dy !== -1) { nextDx = 0; nextDy = 1; }
@@ -539,11 +579,12 @@ function setDirection(dir) {
 }
 
 document.addEventListener("keydown", (e) => {
-  if (e.key === "ArrowUp" || e.key === "w" || e.key === "W") setDirection("UP");
-  if (e.key === "ArrowDown" || e.key === "s" || e.key === "S") setDirection("DOWN");
-  if (e.key === "ArrowLeft" || e.key === "a" || e.key === "A") setDirection("LEFT");
-  if (e.key === "ArrowRight" || e.key === "d" || e.key === "D") setDirection("RIGHT");
-  if (e.code === "Space") isBoosting = true;
+  if (document.activeElement === playerNameInput) return;
+  if (e.code === "ArrowUp" || e.code === "KeyW") { e.preventDefault(); setDirection("UP"); }
+  if (e.code === "ArrowDown" || e.code === "KeyS") { e.preventDefault(); setDirection("DOWN"); }
+  if (e.code === "ArrowLeft" || e.code === "KeyA") { e.preventDefault(); setDirection("LEFT"); }
+  if (e.code === "ArrowRight" || e.code === "KeyD") { e.preventDefault(); setDirection("RIGHT"); }
+  if (e.code === "Space") { e.preventDefault(); isBoosting = true; }
 });
 
 document.addEventListener("keyup", (e) => {
@@ -562,23 +603,23 @@ document.querySelectorAll(".dpad-btn").forEach(btn => {
 let touchStartX = 0, touchStartY = 0;
 canvas.addEventListener("touchstart", (e) => {
   if (e.touches.length > 0) {
-    touchStartX = e.touches[0].clientX;
-    touchStartY = e.touches[0].clientY;
+    touchStartX = e.touches.clientX;
+    touchStartY = e.touches.clientY;
   }
 }, { passive: true });
 
 canvas.addEventListener("touchmove", (e) => {
   if (!gameRunning || e.touches.length === 0) return;
-  const diffX = e.touches[0].clientX - touchStartX;
-  const diffY = e.touches[0].clientY - touchStartY;
+  const diffX = e.touches.clientX - touchStartX;
+  const diffY = e.touches.clientY - touchStartY;
   if (Math.abs(diffX) > 22 || Math.abs(diffY) > 22) {
     if (Math.abs(diffX) > Math.abs(diffY)) {
       setDirection(diffX > 0 ? "RIGHT" : "LEFT");
     } else {
       setDirection(diffY > 0 ? "DOWN" : "UP");
     }
-    touchStartX = e.touches[0].clientX;
-    touchStartY = e.touches[0].clientY;
+    touchStartX = e.touches.clientX;
+    touchStartY = e.touches.clientY;
   }
 }, { passive: true });
 
@@ -588,6 +629,7 @@ boostBtn.addEventListener("touchend", () => { isBoosting = false; });
 boostBtn.addEventListener("touchcancel", () => { isBoosting = false; });
 boostBtn.addEventListener("mousedown", () => { isBoosting = true; });
 boostBtn.addEventListener("mouseup", () => { isBoosting = false; });
+
 function startGame() {
   initAudio();
   clearTimeout(gameLoopTimeout);
@@ -627,7 +669,7 @@ function startGame() {
   scheduleNextStep();
 }
 
-async function fetchWithTimeout(url, options = {}, timeoutMs = 3500) {
+async function fetchWithTimeout(url, options = {}, timeoutMs = 5000) {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeoutMs);
   try {
@@ -655,12 +697,11 @@ async function saveScore(name, finalScore, finalLevel) {
       method: "POST",
       headers: {
         "apikey": SUPABASE_KEY,
-        "Authorization": "Bearer " + SUPABASE_KEY,
         "Content-Type": "application/json",
         "Prefer": "return=minimal"
       },
       body: JSON.stringify({ name, score: finalScore, level: finalLevel })
-    }, 6000);
+    }, 5000);
 
     if (res.ok) {
       statusEl.textContent = "✅ Рекорд сохранён в облачный Топ-10!";
@@ -670,7 +711,7 @@ async function saveScore(name, finalScore, finalLevel) {
       statusEl.style.color = "#ff007f";
     }
   } catch (err) {
-    statusEl.textContent = "📱 Сохранено локально (нет связи с облаком)";
+    statusEl.textContent = "📱 Сохранено локально (облако недоступно)";
     statusEl.style.color = "#ffd700";
   }
 }
@@ -685,7 +726,7 @@ async function openLeaderboard() {
   try {
     const res = await fetchWithTimeout(`${SUPABASE_URL}?select=name,score,level&order=score.desc&limit=10`, {
       headers: { "apikey": SUPABASE_KEY }
-    }, 3500);
+    }, 5000);
     if (res.ok) {
       const cloudRows = await res.json();
       if (Array.isArray(cloudRows) && cloudRows.length > 0) {
@@ -731,5 +772,3 @@ document.getElementById("btn-leaderboard").addEventListener("click", openLeaderb
 document.getElementById("btn-open-top").addEventListener("click", openLeaderboard);
 document.getElementById("btn-end-top").addEventListener("click", openLeaderboard);
 document.getElementById("btn-close-top").addEventListener("click", () => leaderboardModal.classList.add("hidden"));
-
-
