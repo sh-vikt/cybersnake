@@ -1,63 +1,63 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>CyberSnake Online — Неоновая Аркада</title>
+  <title>CyberSnake Online вЂ” РќРµРѕРЅРѕРІР°СЏ РђСЂРєР°РґР°</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <!-- Верхняя панель статуса -->
+  <!-- Р’РµСЂС…РЅСЏСЏ РїР°РЅРµР»СЊ СЃС‚Р°С‚СѓСЃР° -->
   <header class="hud">
     <div class="hud-item">
-      <span class="label">ИГРОК</span>
-      <span id="hud-name" class="value cyan">Гость</span>
+      <span class="label">РР“Р РћРљ</span>
+      <span id="hud-name" class="value cyan">Р“РѕСЃС‚СЊ</span>
     </div>
     <div class="hud-item">
-      <span class="label">СЧЁТ</span>
+      <span class="label">РЎР§РЃРў</span>
       <span id="hud-score" class="value">0</span>
       <span id="hud-combo" class="combo-badge hidden">x2</span>
     </div>
     <div class="hud-item">
-      <span class="label">УРОВЕНЬ</span>
+      <span class="label">РЈР РћР’Р•РќР¬</span>
       <span id="hud-level" class="value pink">1</span>
     </div>
     <div class="hud-item">
-      <span class="label">ЩИТЫ</span>
-      <span id="hud-lives" class="value hearts">❤️❤️❤️</span>
+      <span class="label">Р©РРўР«</span>
+      <span id="hud-lives" class="value hearts">вќ¤пёЏвќ¤пёЏвќ¤пёЏ</span>
     </div>
     <div class="hud-actions">
-      <button id="btn-music" class="icon-btn" title="Музыка">🎵</button>
-      <button id="btn-leaderboard" class="icon-btn" title="Таблица лидеров">🏆</button>
+      <button id="btn-music" class="icon-btn" title="РњСѓР·С‹РєР°">рџЋµ</button>
+      <button id="btn-leaderboard" class="icon-btn" title="РўР°Р±Р»РёС†Р° Р»РёРґРµСЂРѕРІ">рџЏ†</button>
     </div>
   </header>
 
-  <!-- Полоска таймера комбо и активных бонусов -->
+  <!-- РџРѕР»РѕСЃРєР° С‚Р°Р№РјРµСЂР° РєРѕРјР±Рѕ Рё Р°РєС‚РёРІРЅС‹С… Р±РѕРЅСѓСЃРѕРІ -->
   <div class="bars-wrapper">
-    <div class="bar-track" title="Таймер комбо">
+    <div class="bar-track" title="РўР°Р№РјРµСЂ РєРѕРјР±Рѕ">
       <div id="combo-bar" class="bar-fill combo-fill"></div>
     </div>
-    <div id="slow-indicator" class="status-pill hidden">❄️ ЗАМЕДЛЕНИЕ АКТИВНО</div>
+    <div id="slow-indicator" class="status-pill hidden">вќ„пёЏ Р—РђРњР•Р”Р›Р•РќРР• РђРљРўРР’РќРћ</div>
   </div>
 
-  <!-- Игровое поле -->
+  <!-- РРіСЂРѕРІРѕРµ РїРѕР»Рµ -->
   <main class="game-container">
     <canvas id="gameCanvas" width="600" height="600"></canvas>
 
-    <!-- Стартовый экран (Ввод имени и выбор цвета) -->
+    <!-- РЎС‚Р°СЂС‚РѕРІС‹Р№ СЌРєСЂР°РЅ (Р’РІРѕРґ РёРјРµРЅРё Рё РІС‹Р±РѕСЂ С†РІРµС‚Р°) -->
     <div id="start-modal" class="overlay">
       <div class="card">
         <h1 class="neon-title">CYBER<span>SNAKE</span></h1>
-        <p class="subtitle">Уворачивайся от шипов, собирай монеты и ставь рекорды!</p>
+        <p class="subtitle">РЈРІРѕСЂР°С‡РёРІР°Р№СЃСЏ РѕС‚ С€РёРїРѕРІ, СЃРѕР±РёСЂР°Р№ РјРѕРЅРµС‚С‹ Рё СЃС‚Р°РІСЊ СЂРµРєРѕСЂРґС‹!</p>
         
         <div class="input-group">
-          <label for="player-name">Твой никнейм:</label>
-          <input type="text" id="player-name" maxlength="14" placeholder="Например: Neo_Vik" autocomplete="off">
+          <label for="player-name">РўРІРѕР№ РЅРёРєРЅРµР№Рј:</label>
+          <input type="text" id="player-name" maxlength="14" placeholder="РќР°РїСЂРёРјРµСЂ: Neo_Vik" autocomplete="off">
         </div>
 
         <div class="color-picker">
-          <span>Цвет змейки:</span>
+          <span>Р¦РІРµС‚ Р·РјРµР№РєРё:</span>
           <div class="swatches">
             <button class="swatch active" data-color="#00f3ff" style="--c: #00f3ff"></button>
             <button class="swatch" data-color="#ff007f" style="--c: #ff007f"></button>
@@ -67,60 +67,60 @@
         </div>
 
         <div class="legend">
-          <span>🍎 +10</span>
-          <span>🪙 +30</span>
-          <span>🛡️ +1 жизнь</span>
-          <span>❄️ Замедление</span>
-          <span>💀 -1 жизнь</span>
+          <span>рџЌЋ +10</span>
+          <span>рџЄ™ +30</span>
+          <span>рџ›ЎпёЏ +1 Р¶РёР·РЅСЊ</span>
+          <span>вќ„пёЏ Р—Р°РјРµРґР»РµРЅРёРµ</span>
+          <span>рџ’Ђ -1 Р¶РёР·РЅСЊ</span>
         </div>
 
-        <button id="btn-start" class="primary-btn">ИГРАТЬ</button>
-        <button id="btn-open-top" class="secondary-btn">🏆 Зал славы (Топ-10)</button>
+        <button id="btn-start" class="primary-btn">РР“Р РђРўР¬</button>
+        <button id="btn-open-top" class="secondary-btn">рџЏ† Р—Р°Р» СЃР»Р°РІС‹ (РўРѕРї-10)</button>
       </div>
     </div>
 
-    <!-- Экран проигрыша -->
+    <!-- Р­РєСЂР°РЅ РїСЂРѕРёРіСЂС‹С€Р° -->
     <div id="gameover-modal" class="overlay hidden">
       <div class="card">
-        <h2 class="gameover-title">СИСТЕМА ОТКЛЮЧЕНА</h2>
+        <h2 class="gameover-title">РЎРРЎРўР•РњРђ РћРўРљР›Р®Р§Р•РќРђ</h2>
         <p class="final-stats">
-          Игрок: <strong id="end-name"></strong><br>
-          Счёт: <strong id="end-score" class="cyan">0</strong> | Уровень: <strong id="end-level" class="pink">1</strong>
+          РРіСЂРѕРє: <strong id="end-name"></strong><br>
+          РЎС‡С‘С‚: <strong id="end-score" class="cyan">0</strong> | РЈСЂРѕРІРµРЅСЊ: <strong id="end-level" class="pink">1</strong>
         </p>
-        <p id="save-status" class="save-status">Сохраняем рекорд в облако...</p>
-        <button id="btn-restart" class="primary-btn">ИГРАТЬ СНОВА</button>
-        <button id="btn-end-top" class="secondary-btn">🏆 Посмотреть рейтинг</button>
+        <p id="save-status" class="save-status">РЎРѕС…СЂР°РЅСЏРµРј СЂРµРєРѕСЂРґ РІ РѕР±Р»Р°РєРѕ...</p>
+        <button id="btn-restart" class="primary-btn">РР“Р РђРўР¬ РЎРќРћР’Рђ</button>
+        <button id="btn-end-top" class="secondary-btn">рџЏ† РџРѕСЃРјРѕС‚СЂРµС‚СЊ СЂРµР№С‚РёРЅРі</button>
       </div>
     </div>
 
-    <!-- Таблица лидеров (Облачный Топ-10) -->
+    <!-- РўР°Р±Р»РёС†Р° Р»РёРґРµСЂРѕРІ (РћР±Р»Р°С‡РЅС‹Р№ РўРѕРї-10) -->
     <div id="leaderboard-modal" class="overlay hidden">
       <div class="card leaderboard-card">
         <div class="card-header">
-          <h2>🏆 ЗАЛ СЛАВЫ</h2>
-          <button id="btn-close-top" class="close-btn">✕</button>
+          <h2>рџЏ† Р—РђР› РЎР›РђР’Р«</h2>
+          <button id="btn-close-top" class="close-btn">вњ•</button>
         </div>
         <div id="leaderboard-list" class="leaderboard-list">
-          <p class="loading-text">Загрузка рекордов из облака...</p>
+          <p class="loading-text">Р—Р°РіСЂСѓР·РєР° СЂРµРєРѕСЂРґРѕРІ РёР· РѕР±Р»Р°РєР°...</p>
         </div>
       </div>
     </div>
   </main>
 
-  <!-- Сенсорное управление (появляется ТОЛЬКО на телефонах и планшетах) -->
+  <!-- РЎРµРЅСЃРѕСЂРЅРѕРµ СѓРїСЂР°РІР»РµРЅРёРµ (РїРѕСЏРІР»СЏРµС‚СЃСЏ РўРћР›Р¬РљРћ РЅР° С‚РµР»РµС„РѕРЅР°С… Рё РїР»Р°РЅС€РµС‚Р°С…) -->
   <div id="mobile-controls" class="mobile-controls">
     <div class="dpad">
-      <button class="dpad-btn up" data-dir="UP">▲</button>
+      <button class="dpad-btn up" data-dir="UP">в–І</button>
       <div class="dpad-row">
-        <button class="dpad-btn left" data-dir="LEFT">◀</button>
-        <button class="dpad-btn down" data-dir="DOWN">▼</button>
-        <button class="dpad-btn right" data-dir="RIGHT">▶</button>
+        <button class="dpad-btn left" data-dir="LEFT">в—Ђ</button>
+        <button class="dpad-btn down" data-dir="DOWN">в–ј</button>
+        <button class="dpad-btn right" data-dir="RIGHT">в–¶</button>
       </div>
     </div>
-    <button id="btn-boost" class="boost-btn">⚡<br>РЫВОК</button>
+    <button id="btn-boost" class="boost-btn">вљЎ<br>Р Р«Р’РћРљ</button>
   </div>
 
-  <!-- Подключение Firebase (Облачная база данных) -->
-  <script type="module" src="game.js"></script>
+  <!-- РџРѕРґРєР»СЋС‡РµРЅРёРµ Firebase (РћР±Р»Р°С‡РЅР°СЏ Р±Р°Р·Р° РґР°РЅРЅС‹С…) -->
+  <script type="module" src="game.js?v=3"></script>
 </body>
 </html>

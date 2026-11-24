@@ -43,11 +43,13 @@ const bassNotes = [110, 110, 130.81, 146.83, 110, 110, 164.81, 146.83];
 const leadNotes = [440, 523.25, 659.25, 587.33, 440, 392, 329.63, 392];
 
 function initAudio() {
-  if (!audioCtx) {
-    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-    audioCtx = new AudioContextClass();
-  }
-  if (audioCtx.state === "suspended") audioCtx.resume();
+  try {
+    if (!audioCtx) {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (AudioContextClass) audioCtx = new AudioContextClass();
+    }
+    if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+  } catch (e) {}
 }
 
 function playTone(freq, type = "sine", duration = 0.15, vol = 0.16) {
@@ -141,7 +143,6 @@ function generateWallsForLevel(lvl) {
 
   const head = snake[0] || { x: 10, y: 15 };
   const isSafeFromHead = (x, y) => Math.abs(x - head.x) > 3 || Math.abs(y - head.y) > 3;
-
   const layout = currentWorld === 1 ? ((lvl - 2) % 4) : ((lvl + 1) % 4);
 
   if (layout === 0) {
@@ -192,9 +193,7 @@ function setupLevelObjects() {
 
   portals = [];
   if (level >= 4) {
-    const p1 = getFreeCell();
-    const p2 = getFreeCell();
-    portals = [p1, p2];
+    portals = [getFreeCell(), getFreeCell()];
   }
 
   if (currentWorld === 1 && score >= 400 && !worldPortal) {
@@ -404,6 +403,21 @@ function scheduleNextStep() {
   if (isBoosting) baseSpeed = Math.max(42, baseSpeed * 0.55);
   gameLoopTimeout = setTimeout(stepGame, baseSpeed);
 }
+function drawRoundedCell(x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+  ctx.fill();
+}
+
 function draw() {
   animFrame++;
   ctx.fillStyle = currentWorld === 2 ? "#0d0618" : "#080b16";
@@ -474,7 +488,6 @@ function draw() {
     ctx.fill();
     ctx.restore();
   });
-
   ctx.save();
   ctx.fillStyle = "#39ff14";
   ctx.shadowBlur = 14;
@@ -500,9 +513,7 @@ function draw() {
     ctx.fillStyle = idx === 0 ? "#ffffff" : snakeColor;
     ctx.shadowBlur = idx === 0 ? 16 : 8;
     ctx.shadowColor = snakeColor;
-    ctx.beginPath();
-    ctx.roundRect(seg.x * gridSize + 1, seg.y * gridSize + 1, gridSize - 2, gridSize - 2, idx === 0 ? 6 : 4);
-    ctx.fill();
+    drawRoundedCell(seg.x * gridSize + 1, seg.y * gridSize + 1, gridSize - 2, gridSize - 2, idx === 0 ? 6 : 4);
     ctx.restore();
   });
 
@@ -540,20 +551,45 @@ document.addEventListener("keyup", (e) => {
 
 document.querySelectorAll(".dpad-btn").forEach(btn => {
   const handleDir = (e) => {
-    e.preventDefault();
+    if (e.cancelable) e.preventDefault();
     setDirection(btn.dataset.dir);
   };
-  btn.addEventListener("pointerdown", handleDir);
   btn.addEventListener("touchstart", handleDir, { passive: false });
+  btn.addEventListener("mousedown", handleDir);
 });
 
-const boostBtn = document.getElementById("btn-boost");
-boostBtn.addEventListener("pointerdown", (e) => { e.preventDefault(); isBoosting = true; });
-boostBtn.addEventListener("pointerup", () => { isBoosting = false; });
-boostBtn.addEventListener("pointercancel", () => { isBoosting = false; });
+let touchStartX = 0, touchStartY = 0;
+canvas.addEventListener("touchstart", (e) => {
+  if (e.touches.length > 0) {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+  }
+}, { passive: true });
 
+canvas.addEventListener("touchmove", (e) => {
+  if (!gameRunning || e.touches.length === 0) return;
+  const diffX = e.touches[0].clientX - touchStartX;
+  const diffY = e.touches[0].clientY - touchStartY;
+  if (Math.abs(diffX) > 22 || Math.abs(diffY) > 22) {
+    if (Math.abs(diffX) > Math.abs(diffY)) {
+      setDirection(diffX > 0 ? "RIGHT" : "LEFT");
+    } else {
+      setDirection(diffY > 0 ? "DOWN" : "UP");
+    }
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+  }
+}, { passive: true });
+
+const boostBtn = document.getElementById("btn-boost");
+boostBtn.addEventListener("touchstart", (e) => { if (e.cancelable) e.preventDefault(); isBoosting = true; }, { passive: false });
+boostBtn.addEventListener("touchend", () => { isBoosting = false; });
+boostBtn.addEventListener("touchcancel", () => { isBoosting = false; });
+boostBtn.addEventListener("mousedown", () => { isBoosting = true; });
+boostBtn.addEventListener("mouseup", () => { isBoosting = false; });
 function startGame() {
   initAudio();
+  clearTimeout(gameLoopTimeout);
   const rawName = playerNameInput.value.trim() || "Игрок_" + Math.floor(100 + Math.random() * 899);
   localStorage.setItem("cs_player_name", rawName);
   hudName.textContent = rawName;
