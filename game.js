@@ -139,14 +139,7 @@ function spawnExplosion(gx, gy, color) {
   for (let i = 0; i < 14; i++) {
     const angle = (Math.PI * 2 * i) / 14;
     const speed = 1.5 + Math.random() * 2.5;
-    particles.push({
-      x: cx,
-      y: cy,
-      vx: Math.cos(angle) * speed,
-      vy: Math.sin(angle) * speed,
-      color,
-      life: 24
-    });
+    particles.push({ x: cx, y: cy, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, color, life: 24 });
   }
 }
 
@@ -167,49 +160,43 @@ function getSafeSpawnCell() {
     const y = 2 + Math.floor(Math.random() * (tileCount - 4));
     if (!isCellOccupied(x, y, true)) return { x, y };
   }
-  for (let i = 0; i < 150; i++) {
-    const x = 1 + Math.floor(Math.random() * (tileCount - 2));
-    const y = 1 + Math.floor(Math.random() * (tileCount - 2));
-    if (!isCellOccupied(x, y, false)) return { x, y };
-  }
   return { x: 10, y: 10 };
 }
 
 function generateWallsForLevel(lvl) {
   walls = [];
   if (lvl < 2) return;
-
   const head = snake.at(0) || { x: 10, y: 15 };
-  const isSafeFromHead = (x, y) => Math.abs(x - head.x) > 3 || Math.abs(y - head.y) > 3;
+  const isSafe = (x, y) => Math.abs(x - head.x) > 3 || Math.abs(y - head.y) > 3;
   const layout = currentWorld === 1 ? ((lvl - 2) % 4) : ((lvl + 1) % 4);
 
   if (layout === 0) {
     for (let x = 7; x <= 22; x++) {
-      if (isSafeFromHead(x, 7)) walls.push({ x, y: 7 });
-      if (isSafeFromHead(x, 22)) walls.push({ x, y: 22 });
+      if (isSafe(x, 7)) walls.push({ x, y: 7 });
+      if (isSafe(x, 22)) walls.push({ x, y: 22 });
     }
   } else if (layout === 1) {
     for (let y = 6; y <= 23; y++) {
-      if (isSafeFromHead(6, y)) walls.push({ x: 6, y });
-      if (isSafeFromHead(23, y)) walls.push({ x: 23, y });
+      if (isSafe(6, y)) walls.push({ x: 6, y });
+      if (isSafe(23, y)) walls.push({ x: 23, y });
     }
   } else if (layout === 2) {
-    for (let x = 5; x <= 13; x++) if (isSafeFromHead(x, 9)) walls.push({ x, y: 9 });
-    for (let x = 16; x <= 24; x++) if (isSafeFromHead(x, 20)) walls.push({ x, y: 20 });
+    for (let x = 5; x <= 13; x++) if (isSafe(x, 9)) walls.push({ x, y: 9 });
+    for (let x = 16; x <= 24; x++) if (isSafe(x, 20)) walls.push({ x, y: 20 });
   } else {
     for (let i = 6; i <= 11; i++) {
-      if (isSafeFromHead(i, 6)) walls.push({ x: i, y: 6 });
-      if (isSafeFromHead(29 - i, 23)) walls.push({ x: 29 - i, y: 23 });
-      if (isSafeFromHead(6, i)) walls.push({ x: 6, y: i });
-      if (isSafeFromHead(23, 29 - i)) walls.push({ x: 23, y: 29 - i });
+      if (isSafe(i, 6)) walls.push({ x: i, y: 6 });
+      if (isSafe(29 - i, 23)) walls.push({ x: 29 - i, y: 23 });
+      if (isSafe(6, i)) walls.push({ x: 6, y: i });
+      if (isSafe(23, 29 - i)) walls.push({ x: 23, y: 29 - i });
     }
   }
 
   if (currentWorld === 2) {
     for (let i = 12; i <= 17; i++) {
       if (i !== 14 && i !== 15) {
-        if (isSafeFromHead(i, 15)) walls.push({ x: i, y: 15 });
-        if (isSafeFromHead(15, i)) walls.push({ x: 15, y: i });
+        if (isSafe(i, 15)) walls.push({ x: i, y: 15 });
+        if (isSafe(15, i)) walls.push({ x: 15, y: i });
       }
     }
   }
@@ -217,7 +204,6 @@ function generateWallsForLevel(lvl) {
 
 function setupLevelObjects() {
   generateWallsForLevel(level);
-
   spikes = [];
   if (level >= 3) {
     const spikeCount = currentWorld === 2 ? 3 : 2;
@@ -225,7 +211,6 @@ function setupLevelObjects() {
       spikes.push({ x: 5 + i * 5, y: 5 + i * 10, dir: i % 2 === 0 ? 1 : -1 });
     }
   }
-
   portals = [];
   if (level >= 4) {
     const pTopLeft = { x: 3, y: 3 };
@@ -236,17 +221,13 @@ function setupLevelObjects() {
       !(Math.abs(w.x - pBottomRight.x) <= 2 && Math.abs(w.y - pBottomRight.y) <= 2)
     );
   }
-
   if (currentWorld === 1 && score >= 400 && !worldPortal) {
     worldPortal = { x: 14, y: 3 };
     walls = walls.filter(w => !(w.x >= 13 && w.x <= 16 && w.y >= 2 && w.y <= 5));
     addFloatingText(14, 3, "ПОРТАЛ В МИР 2!", "#d946ef");
     playTone(880, "sine", 0.4, 0.25);
   }
-
-  if (isCellOccupied(food.x, food.y, true)) {
-    food = getSafeSpawnCell();
-  }
+  if (isCellOccupied(food.x, food.y, true)) food = getSafeSpawnCell();
 }
 
 function enterWorld2() {
@@ -278,12 +259,7 @@ function fireLaser() {
   if (!gameRunning || isPaused || laserAmmo <= 0) return;
   laserAmmo--;
   const head = snake.at(0);
-  projectiles.push({
-    x: head.x + dx * 0.5,
-    y: head.y + dy * 0.5,
-    vx: dx * 0.45,
-    vy: dy * 0.45
-  });
+  projectiles.push({ x: head.x + dx * 0.5, y: head.y + dy * 0.5, vx: dx * 0.45, vy: dy * 0.45 });
   playTone(950, "sawtooth", 0.12, 0.22);
   updateHUD();
 }
@@ -350,12 +326,10 @@ function updateProjectiles() {
     const p = projectiles.at(i);
     p.x += p.vx;
     p.y += p.vy;
-
     if (p.x < 0 || p.x >= tileCount || p.y < 0 || p.y >= tileCount) {
       projectiles.splice(i, 1);
       continue;
     }
-
     const hitSpikeIdx = spikes.findIndex(sp => Math.abs(sp.x - p.x) < 0.85 && Math.abs(sp.y - p.y) < 0.85);
     if (hitSpikeIdx !== -1) {
       const deadSpike = spikes.at(hitSpikeIdx);
@@ -368,7 +342,6 @@ function updateProjectiles() {
       updateHUD();
       continue;
     }
-
     if (walls.some(w => Math.abs(w.x - p.x) < 0.65 && Math.abs(w.y - p.y) < 0.65)) {
       spawnExplosion(p.x, p.y, "#ff1e56");
       projectiles.splice(i, 1);
@@ -378,7 +351,6 @@ function updateProjectiles() {
 
 function stepSnake() {
   const now = performance.now();
-
   if (inputQueue.length > 0) {
     const nextDir = inputQueue.shift();
     dx = nextDir.dx;
@@ -401,7 +373,6 @@ function stepSnake() {
     return;
   }
 
-  // Односторонние порталы: из верхнего выезд ВСЕГДА вправо, из нижнего — ВСЕГДА влево
   if (portals.length === 2) {
     const pTopLeft = portals.at(0);
     const pBottomRight = portals.at(1);
@@ -509,257 +480,6 @@ function stepSnake() {
     }
   }
 }
-function queueDirection(dir) {
-  const lastDir = inputQueue.length > 0 ? inputQueue.at(-1) : { dx, dy };
-  let ndx = 0, ndy = 0;
-  if (dir === "UP") { ndx = 0; ndy = -1; }
-  if (dir === "DOWN") { ndx = 0; ndy = 1; }
-  if (dir === "LEFT") { ndx = -1; ndy = 0; }
-  if (dir === "RIGHT") { ndx = 1; ndy = 0; }
-
-  if (ndx === -lastDir.dx && ndy === -lastDir.dy) return;
-  if (ndx === lastDir.dx && ndy === lastDir.dy) return;
-  if (inputQueue.length < 2) {
-    inputQueue.push({ dx: ndx, dy: ndy });
-  }
-}
-
-function togglePause() {
-  if (!gameRunning) return;
-  const now = performance.now();
-  if (!isPaused) {
-    isPaused = true;
-    pauseStartTime = now;
-    pauseModal.classList.remove("hidden");
-  } else {
-    const pausedDuration = now - pauseStartTime;
-    if (comboEndTime > 0) comboEndTime += pausedDuration;
-    if (slowEndTime > 0) slowEndTime += pausedDuration;
-    if (magnetEndTime > 0) magnetEndTime += pausedDuration;
-    if (shieldEndTime > 0) shieldEndTime += pausedDuration;
-    if (invulnEndTime > 0) invulnEndTime += pausedDuration;
-    if (bonus) bonus.endTime += pausedDuration;
-    isPaused = false;
-    lastFrameTime = now;
-    pauseModal.classList.add("hidden");
-  }
-}
-
-document.addEventListener("keydown", (e) => {
-  if (document.activeElement === playerNameInput) return;
-  if (e.code === "KeyP" || e.code === "Escape") { e.preventDefault(); togglePause(); return; }
-  if (isPaused) return;
-  if (e.code === "ArrowUp" || e.code === "KeyW") { e.preventDefault(); queueDirection("UP"); }
-  if (e.code === "ArrowDown" || e.code === "KeyS") { e.preventDefault(); queueDirection("DOWN"); }
-  if (e.code === "ArrowLeft" || e.code === "KeyA") { e.preventDefault(); queueDirection("LEFT"); }
-  if (e.code === "ArrowRight" || e.code === "KeyD") { e.preventDefault(); queueDirection("RIGHT"); }
-  if (e.code === "Space") { e.preventDefault(); isBoosting = true; }
-  if (e.code === "KeyF" || e.code === "Enter") {
-    if (gameRunning) { e.preventDefault(); fireLaser(); }
-  }
-});
-
-document.addEventListener("keyup", (e) => {
-  if (e.code === "Space") isBoosting = false;
-});
-
-document.querySelectorAll(".dpad-btn").forEach(btn => {
-  const handleDir = (e) => {
-    if (e.cancelable) e.preventDefault();
-    queueDirection(btn.dataset.dir);
-  };
-  btn.addEventListener("touchstart", handleDir, { passive: false });
-  btn.addEventListener("mousedown", handleDir);
-});
-
-let touchStartX = 0, touchStartY = 0;
-canvas.addEventListener("touchstart", (e) => {
-  const touch = e.touches.item(0);
-  if (touch) {
-    touchStartX = touch.clientX;
-    touchStartY = touch.clientY;
-  }
-}, { passive: true });
-
-canvas.addEventListener("touchmove", (e) => {
-  const touch = e.touches.item(0);
-  if (!gameRunning || isPaused || !touch) return;
-  const diffX = touch.clientX - touchStartX;
-  const diffY = touch.clientY - touchStartY;
-  if (Math.abs(diffX) > 22 || Math.abs(diffY) > 22) {
-    if (Math.abs(diffX) > Math.abs(diffY)) {
-      queueDirection(diffX > 0 ? "RIGHT" : "LEFT");
-    } else {
-      queueDirection(diffY > 0 ? "DOWN" : "UP");
-    }
-    touchStartX = touch.clientX;
-    touchStartY = touch.clientY;
-  }
-}, { passive: true });
-
-const boostBtn = document.getElementById("btn-boost");
-boostBtn.addEventListener("touchstart", (e) => { if (e.cancelable) e.preventDefault(); isBoosting = true; }, { passive: false });
-boostBtn.addEventListener("touchend", () => { isBoosting = false; });
-boostBtn.addEventListener("touchcancel", () => { isBoosting = false; });
-boostBtn.addEventListener("mousedown", () => { isBoosting = true; });
-boostBtn.addEventListener("mouseup", () => { isBoosting = false; });
-
-fireBtn.addEventListener("touchstart", (e) => { if (e.cancelable) e.preventDefault(); fireLaser(); }, { passive: false });
-fireBtn.addEventListener("mousedown", (e) => { e.preventDefault(); fireLaser(); });
-
-function startGame() {
-  initAudio();
-  const rawName = playerNameInput.value.trim() || "Игрок_" + Math.floor(100 + Math.random() * 899);
-  localStorage.setItem("cs_player_name", rawName);
-  hudName.textContent = rawName;
-
-  snake = [{ x: 10, y: 15 }, { x: 9, y: 15 }, { x: 8, y: 15 }];
-  dx = 1; dy = 0; inputQueue = [];
-  score = 0;
-  level = 1;
-  lives = 3;
-  combo = 1;
-  laserAmmo = 0;
-  comboEndTime = 0;
-  slowEndTime = 0;
-  magnetEndTime = 0;
-  shieldEndTime = 0;
-  invulnEndTime = 0;
-  currentWorld = 1;
-  worldPortal = null;
-  worldTransitionFlash = 0;
-  bonus = null;
-  walls = [];
-  spikes = [];
-  projectiles = [];
-  particles = [];
-  portals = [];
-  floatingTexts = [];
-  isPaused = false;
-  isBoosting = false;
-  moveAccumulator = 0;
-  lastFrameTime = 0;
-  document.body.classList.remove("world-2");
-
-  food = getSafeSpawnCell();
-  updateHUD();
-
-  startModal.classList.add("hidden");
-  pauseModal.classList.add("hidden");
-  gameoverModal.classList.add("hidden");
-  leaderboardModal.classList.add("hidden");
-  mobileControls.classList.remove("hidden");
-
-  gameRunning = true;
-  startMusic();
-  requestAnimationFrame(gameLoop);
-}
-async function fetchWithTimeout(url, options = {}, timeoutMs = 6000) {
-  const controller = new AbortController();
-  const id = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    const response = await fetch(url, { ...options, signal: controller.signal });
-    clearTimeout(id);
-    return response;
-  } catch (err) {
-    clearTimeout(id);
-    throw err;
-  }
-}
-
-async function saveScore(name, finalScore, finalLevel) {
-  const statusEl = document.getElementById("save-status");
-  statusEl.textContent = "Сохраняем рекорд...";
-  statusEl.style.color = "#00f3ff";
-
-  const localTop = JSON.parse(localStorage.getItem("cs_local_scores") || "[]");
-  localTop.push({ name, score: finalScore, level: finalLevel });
-  localTop.sort((a, b) => b.score - a.score);
-  localStorage.setItem("cs_local_scores", JSON.stringify(localTop.slice(0, 10)));
-
-  try {
-    const res = await fetchWithTimeout(SUPABASE_URL, {
-      method: "POST",
-      headers: {
-        "apikey": SUPABASE_KEY,
-        "Content-Type": "application/json",
-        "Prefer": "return=minimal"
-      },
-      body: JSON.stringify({ name, score: finalScore, level: finalLevel })
-    }, 6000);
-
-    if (res.ok) {
-      statusEl.textContent = "✅ Рекорд сохранён в облачный Топ-10!";
-      statusEl.style.color = "#39ff14";
-    } else {
-      statusEl.textContent = `⚠️ Ошибка базы (${res.status})`;
-      statusEl.style.color = "#ff007f";
-    }
-  } catch (err) {
-    statusEl.textContent = "📱 Сохранено локально";
-    statusEl.style.color = "#ffd700";
-  }
-}
-
-async function openLeaderboard() {
-  if (gameRunning && !isPaused) togglePause();
-  leaderboardModal.classList.remove("hidden");
-  const listEl = document.getElementById("leaderboard-list");
-  listEl.innerHTML = `<p class="loading-text">Загрузка рекордов...</p>`;
-
-  let rows = JSON.parse(localStorage.getItem("cs_local_scores") || "[]");
-
-  try {
-    const res = await fetchWithTimeout(`${SUPABASE_URL}?select=name,score,level&order=score.desc&limit=10`, {
-      headers: { "apikey": SUPABASE_KEY }
-    }, 6000);
-    if (res.ok) {
-      const cloudRows = await res.json();
-      if (Array.isArray(cloudRows) && cloudRows.length > 0) {
-        rows = cloudRows;
-      }
-    }
-  } catch (e) {}
-
-  if (!rows.length) {
-    listEl.innerHTML = `<p class="loading-text">Пока нет рекордов. Стань первым!</p>`;
-    return;
-  }
-
-  listEl.innerHTML = rows.slice(0, 10).map((r, idx) => {
-    const topClass = idx === 0 ? "top-1" : idx === 1 ? "top-2" : idx === 2 ? "top-3" : "";
-    const medal = idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `#${idx + 1}`;
-    return `
-      <div class="leader-row ${topClass}">
-        <span><strong>${medal}</strong> ${r.name}</span>
-        <span>Ур.${r.level || 1} — <strong class="cyan">${r.score}</strong></span>
-      </div>
-    `;
-  }).join("");
-}
-
-function endGame() {
-  gameRunning = false;
-  stopMusic();
-  mobileControls.classList.add("hidden");
-
-  const playerName = hudName.textContent;
-  document.getElementById("end-name").textContent = playerName;
-  document.getElementById("end-score").textContent = score;
-  document.getElementById("end-level").textContent = currentWorld === 2 ? `${level} (Мир 2)` : level;
-  gameoverModal.classList.remove("hidden");
-
-  saveScore(playerName, score, level);
-}
-
-document.getElementById("btn-start").addEventListener("click", startGame);
-document.getElementById("btn-restart").addEventListener("click", startGame);
-document.getElementById("btn-pause").addEventListener("click", togglePause);
-document.getElementById("btn-resume").addEventListener("click", togglePause);
-document.getElementById("btn-leaderboard").addEventListener("click", openLeaderboard);
-document.getElementById("btn-open-top").addEventListener("click", openLeaderboard);
-document.getElementById("btn-end-top").addEventListener("click", openLeaderboard);
-document.getElementById("btn-close-top").addEventListener("click", () => leaderboardModal.classList.add("hidden"));
 function getCurrentStepInterval() {
   const now = performance.now();
   let interval = Math.max(95, 165 - (level - 1) * 4 - (currentWorld === 2 ? 5 : 0));
@@ -949,7 +669,7 @@ function draw() {
       ctx.font = "bold 12px sans-serif";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.fillText("$", bx, by + 1);
+      ctx.fillText(String.fromCharCode(36), bx, by + 1);
     } else {
       ctx.font = "16px sans-serif";
       ctx.textAlign = "center";
@@ -1040,6 +760,247 @@ function gameLoop(timestamp) {
     updateHUD();
     draw();
   }
-
   requestAnimationFrame(gameLoop);
 }
+function queueDirection(dir) {
+  const lastDir = inputQueue.length > 0 ? inputQueue.at(-1) : { dx, dy };
+  let ndx = 0, ndy = 0;
+  if (dir === "UP") { ndx = 0; ndy = -1; }
+  if (dir === "DOWN") { ndx = 0; ndy = 1; }
+  if (dir === "LEFT") { ndx = -1; ndy = 0; }
+  if (dir === "RIGHT") { ndx = 1; ndy = 0; }
+
+  if (ndx === -lastDir.dx && ndy === -lastDir.dy) return;
+  if (ndx === lastDir.dx && ndy === lastDir.dy) return;
+  if (inputQueue.length < 2) inputQueue.push({ dx: ndx, dy: ndy });
+}
+
+function togglePause() {
+  if (!gameRunning) return;
+  const now = performance.now();
+  if (!isPaused) {
+    isPaused = true;
+    pauseStartTime = now;
+    pauseModal.classList.remove("hidden");
+  } else {
+    const pausedDuration = now - pauseStartTime;
+    if (comboEndTime > 0) comboEndTime += pausedDuration;
+    if (slowEndTime > 0) slowEndTime += pausedDuration;
+    if (magnetEndTime > 0) magnetEndTime += pausedDuration;
+    if (shieldEndTime > 0) shieldEndTime += pausedDuration;
+    if (invulnEndTime > 0) invulnEndTime += pausedDuration;
+    if (bonus) bonus.endTime += pausedDuration;
+    isPaused = false;
+    lastFrameTime = now;
+    pauseModal.classList.add("hidden");
+  }
+}
+
+document.addEventListener("keydown", (e) => {
+  if (document.activeElement === playerNameInput) return;
+  if (e.code === "KeyP" || e.code === "Escape") { e.preventDefault(); togglePause(); return; }
+  if (isPaused) return;
+  if (e.code === "ArrowUp" || e.code === "KeyW") { e.preventDefault(); queueDirection("UP"); }
+  if (e.code === "ArrowDown" || e.code === "KeyS") { e.preventDefault(); queueDirection("DOWN"); }
+  if (e.code === "ArrowLeft" || e.code === "KeyA") { e.preventDefault(); queueDirection("LEFT"); }
+  if (e.code === "ArrowRight" || e.code === "KeyD") { e.preventDefault(); queueDirection("RIGHT"); }
+  if (e.code === "Space") { e.preventDefault(); isBoosting = true; }
+  if (e.code === "KeyF" || e.code === "Enter") {
+    if (gameRunning) { e.preventDefault(); fireLaser(); }
+  }
+});
+
+document.addEventListener("keyup", (e) => {
+  if (e.code === "Space") isBoosting = false;
+});
+
+document.querySelectorAll(".dpad-btn").forEach(btn => {
+  const handleDir = (e) => {
+    if (e.cancelable) e.preventDefault();
+    queueDirection(btn.dataset.dir);
+  };
+  btn.addEventListener("touchstart", handleDir, { passive: false });
+  btn.addEventListener("mousedown", handleDir);
+});
+
+let touchStartX = 0, touchStartY = 0;
+canvas.addEventListener("touchstart", (e) => {
+  const touch = e.touches.item(0);
+  if (touch) { touchStartX = touch.clientX; touchStartY = touch.clientY; }
+}, { passive: true });
+
+canvas.addEventListener("touchmove", (e) => {
+  const touch = e.touches.item(0);
+  if (!gameRunning || isPaused || !touch) return;
+  const diffX = touch.clientX - touchStartX;
+  const diffY = touch.clientY - touchStartY;
+  if (Math.abs(diffX) > 22 || Math.abs(diffY) > 22) {
+    if (Math.abs(diffX) > Math.abs(diffY)) queueDirection(diffX > 0 ? "RIGHT" : "LEFT");
+    else queueDirection(diffY > 0 ? "DOWN" : "UP");
+    touchStartX = touch.clientX;
+    touchStartY = touch.clientY;
+  }
+}, { passive: true });
+
+const boostBtn = document.getElementById("btn-boost");
+boostBtn.addEventListener("touchstart", (e) => { if (e.cancelable) e.preventDefault(); isBoosting = true; }, { passive: false });
+boostBtn.addEventListener("touchend", () => { isBoosting = false; });
+boostBtn.addEventListener("touchcancel", () => { isBoosting = false; });
+boostBtn.addEventListener("mousedown", () => { isBoosting = true; });
+boostBtn.addEventListener("mouseup", () => { isBoosting = false; });
+
+fireBtn.addEventListener("touchstart", (e) => { if (e.cancelable) e.preventDefault(); fireLaser(); }, { passive: false });
+fireBtn.addEventListener("mousedown", (e) => { e.preventDefault(); fireLaser(); });
+
+function startGame() {
+  initAudio();
+  const rawName = playerNameInput.value.trim() || "Игрок_" + Math.floor(100 + Math.random() * 899);
+  localStorage.setItem("cs_player_name", rawName);
+  hudName.textContent = rawName;
+
+  snake = [{ x: 10, y: 15 }, { x: 9, y: 15 }, { x: 8, y: 15 }];
+  dx = 1; dy = 0; inputQueue = [];
+  score = 0;
+  level = 1;
+  lives = 3;
+  combo = 1;
+  laserAmmo = 0;
+  comboEndTime = 0;
+  slowEndTime = 0;
+  magnetEndTime = 0;
+  shieldEndTime = 0;
+  invulnEndTime = 0;
+  currentWorld = 1;
+  worldPortal = null;
+  worldTransitionFlash = 0;
+  bonus = null;
+  walls = [];
+  spikes = [];
+  projectiles = [];
+  particles = [];
+  portals = [];
+  floatingTexts = [];
+  isPaused = false;
+  isBoosting = false;
+  moveAccumulator = 0;
+  lastFrameTime = 0;
+  document.body.classList.remove("world-2");
+
+  food = getSafeSpawnCell();
+  updateHUD();
+
+  startModal.classList.add("hidden");
+  pauseModal.classList.add("hidden");
+  gameoverModal.classList.add("hidden");
+  leaderboardModal.classList.add("hidden");
+  mobileControls.classList.remove("hidden");
+
+  gameRunning = true;
+  startMusic();
+  draw();
+  requestAnimationFrame(gameLoop);
+}
+async function fetchWithTimeout(url, options = {}, timeoutMs = 6000) {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(url, { ...options, signal: controller.signal });
+    clearTimeout(id);
+    return response;
+  } catch (err) {
+    clearTimeout(id);
+    throw err;
+  }
+}
+
+async function saveScore(name, finalScore, finalLevel) {
+  const statusEl = document.getElementById("save-status");
+  statusEl.textContent = "Сохраняем рекорд...";
+  statusEl.style.color = "#00f3ff";
+
+  const localTop = JSON.parse(localStorage.getItem("cs_local_scores") || "[]");
+  localTop.push({ name, score: finalScore, level: finalLevel });
+  localTop.sort((a, b) => b.score - a.score);
+  localStorage.setItem("cs_local_scores", JSON.stringify(localTop.slice(0, 10)));
+
+  try {
+    const res = await fetchWithTimeout(SUPABASE_URL, {
+      method: "POST",
+      headers: {
+        "apikey": SUPABASE_KEY,
+        "Content-Type": "application/json",
+        "Prefer": "return=minimal"
+      },
+      body: JSON.stringify({ name, score: finalScore, level: finalLevel })
+    }, 6000);
+
+    if (res.ok) {
+      statusEl.textContent = "✅ Рекорд сохранён в облачный Топ-10!";
+      statusEl.style.color = "#39ff14";
+    } else {
+      statusEl.textContent = `⚠️ Ошибка базы (${res.status})`;
+      statusEl.style.color = "#ff007f";
+    }
+  } catch (err) {
+    statusEl.textContent = "📱 Сохранено локально";
+    statusEl.style.color = "#ffd700";
+  }
+}
+
+async function openLeaderboard() {
+  if (gameRunning && !isPaused) togglePause();
+  leaderboardModal.classList.remove("hidden");
+  const listEl = document.getElementById("leaderboard-list");
+  listEl.innerHTML = `<p class="loading-text">Загрузка рекордов...</p>`;
+
+  let rows = JSON.parse(localStorage.getItem("cs_local_scores") || "[]");
+
+  try {
+    const res = await fetchWithTimeout(`${SUPABASE_URL}?select=name,score,level&order=score.desc&limit=10`, {
+      headers: { "apikey": SUPABASE_KEY }
+    }, 6000);
+    if (res.ok) {
+      const cloudRows = await res.json();
+      if (Array.isArray(cloudRows) && cloudRows.length > 0) rows = cloudRows;
+    }
+  } catch (e) {}
+
+  if (!rows.length) {
+    listEl.innerHTML = `<p class="loading-text">Пока нет рекордов. Стань первым!</p>`;
+    return;
+  }
+
+  listEl.innerHTML = rows.slice(0, 10).map((r, idx) => {
+    const topClass = idx === 0 ? "top-1" : idx === 1 ? "top-2" : idx === 2 ? "top-3" : "";
+    const medal = idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `#${idx + 1}`;
+    return `
+      <div class="leader-row ${topClass}">
+        <span><strong>${medal}</strong> ${r.name}</span>
+        <span>Ур.${r.level || 1} — <strong class="cyan">${r.score}</strong></span>
+      </div>
+    `;
+  }).join("");
+}
+
+function endGame() {
+  gameRunning = false;
+  stopMusic();
+  mobileControls.classList.add("hidden");
+
+  const playerName = hudName.textContent;
+  document.getElementById("end-name").textContent = playerName;
+  document.getElementById("end-score").textContent = score;
+  document.getElementById("end-level").textContent = currentWorld === 2 ? `${level} (Мир 2)` : level;
+  gameoverModal.classList.remove("hidden");
+
+  saveScore(playerName, score, level);
+}
+
+document.getElementById("btn-start").addEventListener("click", startGame);
+document.getElementById("btn-restart").addEventListener("click", startGame);
+document.getElementById("btn-pause").addEventListener("click", togglePause);
+document.getElementById("btn-resume").addEventListener("click", togglePause);
+document.getElementById("btn-leaderboard").addEventListener("click", openLeaderboard);
+document.getElementById("btn-open-top").addEventListener("click", openLeaderboard);
+document.getElementById("btn-end-top").addEventListener("click", openLeaderboard);
+document.getElementById("btn-close-top").addEventListener("click", () => leaderboardModal.classList.add("hidden"));
