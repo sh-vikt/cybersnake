@@ -274,10 +274,11 @@ function stepGame() {
   dy = nextDy;
 
   let head = { x: snake[0].x + dx, y: snake[0].y + dy };
-  if (head.x < 0) head.x = tileCount - 1;
-  if (head.x >= tileCount) head.x = 0;
-  if (head.y < 0) head.y = tileCount - 1;
-  if (head.y >= tileCount) head.y = 0;
+  if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount) {
+    takeDamage("СТЕНА!");
+    if (!gameRunning) return;
+    head = { x: Math.floor(tileCount / 2), y: Math.floor(tileCount / 2) };
+  }
 
   if (worldPortal && head.x >= worldPortal.x && head.x <= worldPortal.x + 1 && head.y >= worldPortal.y && head.y <= worldPortal.y + 1) {
     snake.unshift(head);
@@ -654,20 +655,22 @@ async function saveScore(name, finalScore, finalLevel) {
       method: "POST",
       headers: {
         "apikey": SUPABASE_KEY,
+        "Authorization": "Bearer " + SUPABASE_KEY,
         "Content-Type": "application/json",
         "Prefer": "return=minimal"
       },
       body: JSON.stringify({ name, score: finalScore, level: finalLevel })
-    }, 3500);
+    }, 6000);
 
     if (res.ok) {
       statusEl.textContent = "✅ Рекорд сохранён в облачный Топ-10!";
       statusEl.style.color = "#39ff14";
     } else {
-      throw new Error("HTTP " + res.status);
+      statusEl.textContent = "⚠️ База отклонила запись (код " + res.status + ")";
+      statusEl.style.color = "#ff007f";
     }
   } catch (err) {
-    statusEl.textContent = "📱 Сохранено локально (облако сейчас не ответило)";
+    statusEl.textContent = "📱 Сохранено локально (нет связи с облаком)";
     statusEl.style.color = "#ffd700";
   }
 }
@@ -728,3 +731,5 @@ document.getElementById("btn-leaderboard").addEventListener("click", openLeaderb
 document.getElementById("btn-open-top").addEventListener("click", openLeaderboard);
 document.getElementById("btn-end-top").addEventListener("click", openLeaderboard);
 document.getElementById("btn-close-top").addEventListener("click", () => leaderboardModal.classList.add("hidden"));
+
+
