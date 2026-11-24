@@ -1,4 +1,4 @@
-const SUPABASE_URL = "https://supabase.co";
+const SUPABASE_URL = "https://" + "ngqugdrerexqgzcwhnnm.supabase.co/rest/v1/scores";
 const SUPABASE_KEY = "sb_publishable_UL-vGDHR1WNwUkOAFGni0Q_W2Q_u63k";
 
 const canvas = document.getElementById("gameCanvas");
@@ -74,10 +74,8 @@ function startMusic() {
   if (!musicEnabled) return;
   musicInterval = setInterval(() => {
     if (!gameRunning || !musicEnabled) return;
-    const bass = bassNotes[noteIndex % bassNotes.length];
-    const lead = leadNotes[noteIndex % leadNotes.length];
-    playTone(bass, "triangle", 0.24, 0.14);
-    if (noteIndex % 2 === 0) playTone(lead, "sine", 0.18, 0.09);
+    playTone(bassNotes[noteIndex % bassNotes.length], "triangle", 0.24, 0.14);
+    if (noteIndex % 2 === 0) playTone(leadNotes[noteIndex % leadNotes.length], "sine", 0.18, 0.09);
     noteIndex++;
   }, 250);
 }
@@ -143,7 +141,7 @@ function generateWallsForLevel(lvl) {
   walls = [];
   if (lvl < 2) return;
 
-  const head = snake[0] || { x: 10, y: 15 };
+  const head = snake.at(0) || { x: 10, y: 15 };
   const isSafeFromHead = (x, y) => Math.abs(x - head.x) > 3 || Math.abs(y - head.y) > 3;
   const layout = currentWorld === 1 ? ((lvl - 2) % 4) : ((lvl + 1) % 4);
 
@@ -158,12 +156,8 @@ function generateWallsForLevel(lvl) {
       if (isSafeFromHead(23, y)) walls.push({ x: 23, y });
     }
   } else if (layout === 2) {
-    for (let x = 5; x <= 13; x++) {
-      if (isSafeFromHead(x, 9)) walls.push({ x, y: 9 });
-    }
-    for (let x = 16; x <= 24; x++) {
-      if (isSafeFromHead(x, 20)) walls.push({ x, y: 20 });
-    }
+    for (let x = 5; x <= 13; x++) if (isSafeFromHead(x, 9)) walls.push({ x, y: 9 });
+    for (let x = 16; x <= 24; x++) if (isSafeFromHead(x, 20)) walls.push({ x, y: 20 });
   } else {
     for (let i = 6; i <= 11; i++) {
       if (isSafeFromHead(i, 6)) walls.push({ x: i, y: 6 });
@@ -190,8 +184,7 @@ function setupLevelObjects() {
   if (level >= 3) {
     const spikeCount = currentWorld === 2 ? 3 : 2;
     for (let i = 0; i < spikeCount; i++) {
-      const yPos = 5 + i * 10;
-      spikes.push({ x: 5 + i * 5, y: yPos, dir: i % 2 === 0 ? 1 : -1 });
+      spikes.push({ x: 5 + i * 5, y: 5 + i * 10, dir: i % 2 === 0 ? 1 : -1 });
     }
   }
 
@@ -221,7 +214,8 @@ function enterWorld2() {
   document.body.classList.add("world-2");
   invulnTimer = 28;
   score += 100;
-  addFloatingText(snake[0].x, snake[0].y, "⚡ ДОБРО ПОЖАЛОВАТЬ В МИР 2! +100 ⚡", "#ffd700");
+  const head = snake.at(0);
+  addFloatingText(head.x, head.y, "⚡ ДОБРО ПОЖАЛОВАТЬ В МИР 2! +100 ⚡", "#ffd700");
   playTone(523.25, "triangle", 0.15, 0.25);
   setTimeout(() => playTone(659.25, "triangle", 0.15, 0.25), 120);
   setTimeout(() => playTone(1046.5, "sine", 0.35, 0.3), 240);
@@ -235,22 +229,15 @@ function spawnBonus() {
   const types = currentWorld === 2
     ? ["coin", "magnet", "energy", "shield", "slow", "bomb"]
     : ["coin", "shield", "slow", "magnet", "bomb"];
-  const type = types[Math.floor(Math.random() * types.length)];
-  bonus = { ...pos, type, timer: 110 };
+  bonus = { ...pos, type: types[Math.floor(Math.random() * types.length)], timer: 110 };
 }
 
 function updateHUD() {
   hudScore.textContent = score;
   hudLevel.textContent = currentWorld === 2 ? `${level} 🌌 МИР 2` : level;
   hudLives.textContent = "❤️".repeat(Math.max(0, lives));
-
-  if (combo > 1) {
-    hudCombo.textContent = "x" + combo;
-    hudCombo.classList.remove("hidden");
-  } else {
-    hudCombo.classList.add("hidden");
-  }
-
+  hudCombo.textContent = "x" + combo;
+  hudCombo.classList.toggle("hidden", combo <= 1);
   comboBar.style.width = Math.min(100, (comboTimer / 45) * 100) + "%";
 
   if (magnetTimer > 0) {
@@ -271,19 +258,20 @@ function takeDamage(reason) {
   comboTimer = 0;
   invulnTimer = 18;
   playTone(140, "sawtooth", 0.3, 0.25);
-  addFloatingText(snake[0].x, snake[0].y, reason, "#ff007f");
+  const head = snake.at(0);
+  addFloatingText(head.x, head.y, reason, "#ff007f");
   updateHUD();
-  if (lives <= 0) {
-    endGame();
-  }
+  if (lives <= 0) endGame();
 }
+
 function stepGame() {
   if (!gameRunning) return;
 
   dx = nextDx;
   dy = nextDy;
 
-  let head = { x: snake.x + dx, y: snake.y + dy };
+  const currentHead = snake.at(0);
+  let head = { x: currentHead.x + dx, y: currentHead.y + dy };
   if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount) {
     takeDamage("СТЕНА!");
     if (!gameRunning) return;
@@ -299,11 +287,13 @@ function stepGame() {
   }
 
   if (portals.length === 2) {
-    if (head.x === portals.x && head.y === portals.y) {
-      head = { x: portals.x + dx, y: portals.y + dy };
+    const pA = portals.at(0);
+    const pB = portals.at(1);
+    if (head.x === pA.x && head.y === pA.y) {
+      head = { x: pB.x + dx, y: pB.y + dy };
       playTone(660, "sine", 0.15, 0.2);
-    } else if (head.x === portals.x && head.y === portals.y) {
-      head = { x: portals.x + dx, y: portals.y + dy };
+    } else if (head.x === pB.x && head.y === pB.y) {
+      head = { x: pA.x + dx, y: pA.y + dy };
       playTone(660, "sine", 0.15, 0.2);
     }
     head.x = Math.max(0, Math.min(tileCount - 1, head.x));
@@ -395,10 +385,7 @@ function stepGame() {
     }
   }
 
-  if (comboTimer > 0) {
-    comboTimer--;
-    if (comboTimer === 0) combo = 1;
-  }
+  if (comboTimer > 0 && --comboTimer === 0) combo = 1;
   if (slowTimer > 0) slowTimer--;
   if (magnetTimer > 0) magnetTimer--;
   if (invulnTimer > 0) invulnTimer--;
@@ -476,12 +463,13 @@ function draw() {
   }
 
   if (portals.length === 2) {
+    const pA = portals.at(0);
+    const pB = portals.at(1);
     ctx.save();
     ctx.strokeStyle = "rgba(0, 243, 255, 0.12)";
-    ctx.setLineDash();
     ctx.beginPath();
-    ctx.moveTo(portals.x * gridSize + gridSize / 2, portals.y * gridSize + gridSize / 2);
-    ctx.lineTo(portals.x * gridSize + gridSize / 2, portals.y * gridSize + gridSize / 2);
+    ctx.moveTo(pA.x * gridSize + gridSize / 2, pA.y * gridSize + gridSize / 2);
+    ctx.lineTo(pB.x * gridSize + gridSize / 2, pB.y * gridSize + gridSize / 2);
     ctx.stroke();
     ctx.restore();
   }
@@ -639,24 +627,26 @@ document.querySelectorAll(".dpad-btn").forEach(btn => {
 
 let touchStartX = 0, touchStartY = 0;
 canvas.addEventListener("touchstart", (e) => {
-  if (e.touches.length > 0) {
-    touchStartX = e.touches.clientX;
-    touchStartY = e.touches.clientY;
+  const touch = e.touches.item(0);
+  if (touch) {
+    touchStartX = touch.clientX;
+    touchStartY = touch.clientY;
   }
 }, { passive: true });
 
 canvas.addEventListener("touchmove", (e) => {
-  if (!gameRunning || e.touches.length === 0) return;
-  const diffX = e.touches.clientX - touchStartX;
-  const diffY = e.touches.clientY - touchStartY;
+  const touch = e.touches.item(0);
+  if (!gameRunning || !touch) return;
+  const diffX = touch.clientX - touchStartX;
+  const diffY = touch.clientY - touchStartY;
   if (Math.abs(diffX) > 22 || Math.abs(diffY) > 22) {
     if (Math.abs(diffX) > Math.abs(diffY)) {
       setDirection(diffX > 0 ? "RIGHT" : "LEFT");
     } else {
       setDirection(diffY > 0 ? "DOWN" : "UP");
     }
-    touchStartX = e.touches.clientX;
-    touchStartY = e.touches.clientY;
+    touchStartX = touch.clientX;
+    touchStartY = touch.clientY;
   }
 }, { passive: true });
 
@@ -707,6 +697,7 @@ function startGame() {
   draw();
   scheduleNextStep();
 }
+
 async function fetchWithTimeout(url, options = {}, timeoutMs = 6000) {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeoutMs);
