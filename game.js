@@ -13,6 +13,7 @@ const hudLevel = document.getElementById("hud-level");
 const hudLives = document.getElementById("hud-lives");
 const comboBar = document.getElementById("combo-bar");
 const slowIndicator = document.getElementById("slow-indicator");
+const mobileControls = document.getElementById("mobile-controls");
 
 const startModal = document.getElementById("start-modal");
 const gameoverModal = document.getElementById("gameover-modal");
@@ -141,7 +142,7 @@ function generateWallsForLevel(lvl) {
   walls = [];
   if (lvl < 2) return;
 
-  const head = snake || { x: 10, y: 15 };
+  const head = snake[0] || { x: 10, y: 15 };
   const isSafeFromHead = (x, y) => Math.abs(x - head.x) > 3 || Math.abs(y - head.y) > 3;
   const layout = currentWorld === 1 ? ((lvl - 2) % 4) : ((lvl + 1) % 4);
 
@@ -216,7 +217,7 @@ function enterWorld2() {
   document.body.classList.add("world-2");
   invulnTimer = 25;
   score += 100;
-  addFloatingText(snake.x, snake.y, "МИР 2: КИБЕР-ЯДРО! +100", "#ffd700");
+  addFloatingText(snake[0].x, snake[0].y, "МИР 2: КИБЕР-ЯДРО! +100", "#ffd700");
   playTone(523.25, "triangle", 0.15, 0.25);
   setTimeout(() => playTone(659.25, "triangle", 0.15, 0.25), 120);
   setTimeout(() => playTone(1046.5, "sine", 0.35, 0.3), 240);
@@ -266,20 +267,19 @@ function takeDamage(reason) {
   comboTimer = 0;
   invulnTimer = 18;
   playTone(140, "sawtooth", 0.3, 0.25);
-  addFloatingText(snake.x, snake.y, reason, "#ff007f");
+  addFloatingText(snake[0].x, snake[0].y, reason, "#ff007f");
   updateHUD();
   if (lives <= 0) {
     endGame();
   }
 }
-
 function stepGame() {
   if (!gameRunning) return;
 
   dx = nextDx;
   dy = nextDy;
 
-  let head = { x: snake.x + dx, y: snake.y + dy };
+  let head = { x: snake[0].x + dx, y: snake[0].y + dy };
   if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount) {
     takeDamage("СТЕНА!");
     if (!gameRunning) return;
@@ -295,12 +295,12 @@ function stepGame() {
   }
 
   if (portals.length === 2) {
-    if (head.x === portals.x && head.y === portals.y) {
-      head = { x: portals.x + dx, y: portals.y + dy };
+    if (head.x === portals[0].x && head.y === portals[0].y) {
+      head = { x: portals[1].x + dx, y: portals[1].y + dy };
       addFloatingText(head.x, head.y, "ТЕЛЕПОРТ!", "#00f3ff");
       playTone(660, "sine", 0.15, 0.2);
-    } else if (head.x === portals.x && head.y === portals.y) {
-      head = { x: portals.x + dx, y: portals.y + dy };
+    } else if (head.x === portals[1].x && head.y === portals[1].y) {
+      head = { x: portals[0].x + dx, y: portals[0].y + dy };
       addFloatingText(head.x, head.y, "ТЕЛЕПОРТ!", "#ff007f");
       playTone(660, "sine", 0.15, 0.2);
     }
@@ -412,6 +412,7 @@ function scheduleNextStep() {
   if (isBoosting) baseSpeed = Math.max(42, baseSpeed * 0.55);
   gameLoopTimeout = setTimeout(stepGame, baseSpeed);
 }
+
 function drawRoundedCell(x, y, w, h, r) {
   ctx.beginPath();
   ctx.moveTo(x + r, y);
@@ -448,10 +449,10 @@ function draw() {
   if (portals.length === 2) {
     ctx.save();
     ctx.strokeStyle = "rgba(0, 243, 255, 0.14)";
-    ctx.setLineDash([5, 5]);
+    ctx.setLineDash([4, 6]);
     ctx.beginPath();
-    ctx.moveTo(portals.x * gridSize + gridSize / 2, portals.y * gridSize + gridSize / 2);
-    ctx.lineTo(portals.x * gridSize + gridSize / 2, portals.y * gridSize + gridSize / 2);
+    ctx.moveTo(portals[0].x * gridSize + gridSize / 2, portals[0].y * gridSize + gridSize / 2);
+    ctx.lineTo(portals[1].x * gridSize + gridSize / 2, portals[1].y * gridSize + gridSize / 2);
     ctx.stroke();
     ctx.restore();
   }
@@ -603,23 +604,23 @@ document.querySelectorAll(".dpad-btn").forEach(btn => {
 let touchStartX = 0, touchStartY = 0;
 canvas.addEventListener("touchstart", (e) => {
   if (e.touches.length > 0) {
-    touchStartX = e.touches.clientX;
-    touchStartY = e.touches.clientY;
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
   }
 }, { passive: true });
 
 canvas.addEventListener("touchmove", (e) => {
   if (!gameRunning || e.touches.length === 0) return;
-  const diffX = e.touches.clientX - touchStartX;
-  const diffY = e.touches.clientY - touchStartY;
+  const diffX = e.touches[0].clientX - touchStartX;
+  const diffY = e.touches[0].clientY - touchStartY;
   if (Math.abs(diffX) > 22 || Math.abs(diffY) > 22) {
     if (Math.abs(diffX) > Math.abs(diffY)) {
       setDirection(diffX > 0 ? "RIGHT" : "LEFT");
     } else {
       setDirection(diffY > 0 ? "DOWN" : "UP");
     }
-    touchStartX = e.touches.clientX;
-    touchStartY = e.touches.clientY;
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
   }
 }, { passive: true });
 
@@ -662,6 +663,7 @@ function startGame() {
   startModal.classList.add("hidden");
   gameoverModal.classList.add("hidden");
   leaderboardModal.classList.add("hidden");
+  mobileControls.classList.remove("hidden");
 
   gameRunning = true;
   startMusic();
@@ -756,6 +758,7 @@ function endGame() {
   gameRunning = false;
   clearTimeout(gameLoopTimeout);
   stopMusic();
+  mobileControls.classList.add("hidden");
 
   const playerName = hudName.textContent;
   document.getElementById("end-name").textContent = playerName;
