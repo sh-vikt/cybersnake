@@ -760,3 +760,286 @@ document.getElementById("btn-leaderboard").addEventListener("click", openLeaderb
 document.getElementById("btn-open-top").addEventListener("click", openLeaderboard);
 document.getElementById("btn-end-top").addEventListener("click", openLeaderboard);
 document.getElementById("btn-close-top").addEventListener("click", () => leaderboardModal.classList.add("hidden"));
+function getCurrentStepInterval() {
+  const now = performance.now();
+  let interval = Math.max(95, 165 - (level - 1) * 4 - (currentWorld === 2 ? 5 : 0));
+  if (now < slowEndTime) interval += 55;
+  if (isBoosting) interval = Math.max(60, interval * 0.58);
+  return interval;
+}
+
+function drawRoundedCell(x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function draw() {
+  animFrame++;
+  const now = performance.now();
+
+  if (currentWorld === 2) {
+    const grad = ctx.createRadialGradient(canvas.width / 2, canvas.height / 2, 30, canvas.width / 2, canvas.height / 2, 360);
+    grad.addColorStop(0, "#1f0836");
+    grad.addColorStop(1, "#090212");
+    ctx.fillStyle = grad;
+  } else {
+    ctx.fillStyle = "#080b16";
+  }
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.strokeStyle = currentWorld === 2 ? "rgba(217, 70, 239, 0.16)" : "rgba(0, 243, 255, 0.06)";
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= tileCount; i++) {
+    ctx.beginPath();
+    ctx.moveTo(i * gridSize, 0);
+    ctx.lineTo(i * gridSize, canvas.height);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(0, i * gridSize);
+    ctx.lineTo(canvas.width, i * gridSize);
+    ctx.stroke();
+  }
+
+  if (currentWorld === 2) {
+    ctx.fillStyle = "rgba(255, 215, 0, 0.18)";
+    for (let x = 3; x < tileCount; x += 4) {
+      for (let y = 3; y < tileCount; y += 4) {
+        ctx.fillRect(x * gridSize - 1, y * gridSize - 1, 3, 3);
+      }
+    }
+    ctx.save();
+    ctx.translate(canvas.width / 2, canvas.height / 2);
+    ctx.rotate(animFrame * 0.015);
+    ctx.strokeStyle = "rgba(217, 70, 239, 0.35)";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(-14, -14, 28, 28);
+    ctx.rotate(Math.PI / 4);
+    ctx.strokeStyle = "rgba(255, 215, 0, 0.35)";
+    ctx.strokeRect(-14, -14, 28, 28);
+    ctx.restore();
+  }
+
+  portals.forEach((p, idx) => {
+    ctx.save();
+    const cx = p.x * gridSize + gridSize / 2;
+    const cy = p.y * gridSize + gridSize / 2;
+    const color = idx === 0 ? "#00f3ff" : "#ff007f";
+    const pulse = Math.sin(animFrame * 0.08) * 3;
+
+    ctx.fillStyle = idx === 0 ? "rgba(0, 243, 255, 0.25)" : "rgba(255, 0, 127, 0.25)";
+    ctx.beginPath();
+    ctx.arc(cx, cy, gridSize * 0.8 + pulse, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.translate(cx, cy);
+    ctx.rotate(animFrame * 0.04 * (idx === 0 ? 1 : -1));
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2.5;
+    ctx.shadowBlur = 14;
+    ctx.shadowColor = color;
+    ctx.strokeRect(-gridSize * 0.55, -gridSize * 0.55, gridSize * 1.1, gridSize * 1.1);
+    ctx.rotate(Math.PI / 4);
+    ctx.strokeRect(-gridSize * 0.45, -gridSize * 0.45, gridSize * 0.9, gridSize * 0.9);
+    ctx.restore();
+
+    ctx.save();
+    ctx.fillStyle = color;
+    ctx.font = "bold 12px sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(idx === 0 ? "→" : "←", idx === 0 ? cx + 22 : cx - 22, cy);
+    ctx.restore();
+  });
+
+  if (worldPortal) {
+    ctx.save();
+    const px = worldPortal.x * gridSize;
+    const py = worldPortal.y * gridSize;
+    const size = gridSize * 2;
+    const pulse = Math.sin(animFrame * 0.08) * 4;
+    ctx.strokeStyle = "#d946ef";
+    ctx.lineWidth = 4;
+    ctx.shadowBlur = 22;
+    ctx.shadowColor = "#d946ef";
+    ctx.strokeRect(px - pulse / 2, py - pulse / 2, size + pulse, size + pulse);
+    ctx.fillStyle = "rgba(217, 70, 239, 0.28)";
+    ctx.fillRect(px, py, size, size);
+    ctx.fillStyle = "#fff";
+    ctx.font = "bold 10px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("МИР 2", px + size / 2, py + size / 2 + 4);
+    ctx.restore();
+  }
+
+  walls.forEach(w => {
+    ctx.save();
+    ctx.fillStyle = currentWorld === 2 ? "#f43f5e" : "#ff1e56";
+    ctx.shadowBlur = 10;
+    ctx.shadowColor = "#ff1e56";
+    ctx.fillRect(w.x * gridSize + 2, w.y * gridSize + 2, gridSize - 4, gridSize - 4);
+    ctx.restore();
+  });
+
+  spikes.forEach(sp => {
+    ctx.save();
+    ctx.fillStyle = "#ff9900";
+    ctx.shadowBlur = 10;
+    ctx.shadowColor = "#ff9900";
+    ctx.beginPath();
+    ctx.moveTo(sp.x * gridSize + gridSize / 2, sp.y * gridSize + 2);
+    ctx.lineTo(sp.x * gridSize + gridSize - 2, sp.y * gridSize + gridSize - 2);
+    ctx.lineTo(sp.x * gridSize + 2, sp.y * gridSize + gridSize - 2);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  });
+
+  projectiles.forEach(p => {
+    ctx.save();
+    const px = p.x * gridSize + gridSize / 2;
+    const py = p.y * gridSize + gridSize / 2;
+    ctx.fillStyle = "#ffd700";
+    ctx.shadowBlur = 14;
+    ctx.shadowColor = "#ff007f";
+    ctx.beginPath();
+    ctx.arc(px, py, 5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  });
+  ctx.save();
+  ctx.fillStyle = "#39ff14";
+  ctx.shadowBlur = 14;
+  ctx.shadowColor = "#39ff14";
+  ctx.beginPath();
+  ctx.arc(food.x * gridSize + gridSize / 2, food.y * gridSize + gridSize / 2, gridSize / 2.4, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  if (bonus) {
+    ctx.save();
+    const bx = bonus.x * gridSize + gridSize / 2;
+    const by = bonus.y * gridSize + gridSize / 2;
+    if (bonus.type === "coin") {
+      const r = gridSize * 0.44 + Math.sin(animFrame * 0.1) * 0.8;
+      const grad = ctx.createRadialGradient(bx - 3, by - 3, 1, bx, by, r);
+      grad.addColorStop(0, "#fff7b2");
+      grad.addColorStop(0.5, "#ffd700");
+      grad.addColorStop(1, "#b8860b");
+      ctx.fillStyle = grad;
+      ctx.shadowBlur = 14;
+      ctx.shadowColor = "#ffd700";
+      ctx.beginPath();
+      ctx.arc(bx, by, r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#fff";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = "#4a3200";
+      ctx.font = "bold 12px sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("$", bx, by + 1);
+    } else {
+      ctx.font = "16px sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      const icons = { heart: "❤️", shield: "🛡️", gun: "🔫", slow: "❄️", bomb: "💀", magnet: "🧲", energy: "⚡" };
+      ctx.fillText(icons[bonus.type] || "⭐", bx, by + 1);
+    }
+    ctx.restore();
+  }
+
+  const hasShield = now < shieldEndTime;
+  const isInvuln = now < invulnEndTime;
+  snake.forEach((seg, idx) => {
+    ctx.save();
+    if (isInvuln && Math.floor(animFrame / 4) % 2 === 0) ctx.globalAlpha = 0.45;
+    if (currentWorld === 2) {
+      ctx.fillStyle = idx === 0 ? "#ffd700" : (idx % 2 === 0 ? "#d946ef" : snakeColor);
+      ctx.shadowBlur = idx === 0 ? 18 : 10;
+      ctx.shadowColor = "#d946ef";
+    } else {
+      ctx.fillStyle = idx === 0 ? "#ffffff" : snakeColor;
+      ctx.shadowBlur = idx === 0 ? 16 : 8;
+      ctx.shadowColor = snakeColor;
+    }
+    drawRoundedCell(seg.x * gridSize + 1, seg.y * gridSize + 1, gridSize - 2, gridSize - 2, idx === 0 ? 6 : 4);
+
+    if (hasShield && idx === 0) {
+      ctx.strokeStyle = "#00f3ff";
+      ctx.lineWidth = 2.5;
+      ctx.shadowBlur = 16;
+      ctx.shadowColor = "#00f3ff";
+      ctx.beginPath();
+      ctx.arc(seg.x * gridSize + gridSize / 2, seg.y * gridSize + gridSize / 2, gridSize * 0.85, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.restore();
+  });
+
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const pt = particles.at(i);
+    ctx.save();
+    ctx.fillStyle = pt.color;
+    ctx.globalAlpha = pt.life / 24;
+    ctx.fillRect(pt.x - 2, pt.y - 2, 4, 4);
+    pt.x += pt.vx;
+    pt.y += pt.vy;
+    pt.life--;
+    ctx.restore();
+    if (pt.life <= 0) particles.splice(i, 1);
+  }
+
+  if (worldTransitionFlash > 0) {
+    ctx.save();
+    ctx.fillStyle = `rgba(217, 70, 239, ${worldTransitionFlash / 45})`;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    worldTransitionFlash--;
+    ctx.restore();
+  }
+
+  for (let i = floatingTexts.length - 1; i >= 0; i--) {
+    const ft = floatingTexts.at(i);
+    ctx.save();
+    ctx.fillStyle = ft.color;
+    ctx.font = "bold 13px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(ft.text, ft.x, ft.y);
+    ft.y -= 0.45;
+    ft.life--;
+    ctx.restore();
+    if (ft.life <= 0) floatingTexts.splice(i, 1);
+  }
+}
+
+function gameLoop(timestamp) {
+  if (!gameRunning) return;
+  if (!lastFrameTime) lastFrameTime = timestamp;
+  const delta = timestamp - lastFrameTime;
+  lastFrameTime = timestamp;
+
+  if (!isPaused) {
+    moveAccumulator += delta;
+    updateProjectiles();
+    const stepInterval = getCurrentStepInterval();
+    if (moveAccumulator >= stepInterval) {
+      moveAccumulator %= stepInterval;
+      stepSnake();
+    }
+    updateHUD();
+    draw();
+  }
+
+  requestAnimationFrame(gameLoop);
+}
