@@ -139,7 +139,7 @@ function generateWallsForLevel(lvl) {
   walls = [];
   if (lvl < 2) return;
 
-  const head = snake || { x: 10, y: 15 };
+  const head = snake[0] || { x: 10, y: 15 };
   const isSafeFromHead = (x, y) => Math.abs(x - head.x) > 3 || Math.abs(y - head.y) > 3;
 
   const layout = currentWorld === 1 ? ((lvl - 2) % 4) : ((lvl + 1) % 4);
@@ -211,7 +211,7 @@ function enterWorld2() {
   document.body.classList.add("world-2");
   invulnTimer = 25;
   score += 100;
-  addFloatingText(snake.x, snake.y, "МИР 2: КИБЕР-ЯДРО! +100", "#ffd700");
+  addFloatingText(snake[0].x, snake[0].y, "МИР 2: КИБЕР-ЯДРО! +100", "#ffd700");
   playTone(523.25, "triangle", 0.15, 0.25);
   setTimeout(() => playTone(659.25, "triangle", 0.15, 0.25), 120);
   setTimeout(() => playTone(1046.5, "sine", 0.35, 0.3), 240);
@@ -261,7 +261,7 @@ function takeDamage(reason) {
   comboTimer = 0;
   invulnTimer = 18;
   playTone(140, "sawtooth", 0.3, 0.25);
-  addFloatingText(snake.x, snake.y, reason, "#ff007f");
+  addFloatingText(snake[0].x, snake[0].y, reason, "#ff007f");
   updateHUD();
   if (lives <= 0) {
     endGame();
@@ -274,7 +274,7 @@ function stepGame() {
   dx = nextDx;
   dy = nextDy;
 
-  let head = { x: snake.x + dx, y: snake.y + dy };
+  let head = { x: snake[0].x + dx, y: snake[0].y + dy };
   if (head.x < 0) head.x = tileCount - 1;
   if (head.x >= tileCount) head.x = 0;
   if (head.y < 0) head.y = tileCount - 1;
@@ -289,11 +289,11 @@ function stepGame() {
   }
 
   if (portals.length === 2) {
-    if (head.x === portals.x && head.y === portals.y) {
-      head = { x: portals.x + dx, y: portals.y + dy };
+    if (head.x === portals[0].x && head.y === portals[0].y) {
+      head = { x: portals[1].x + dx, y: portals[1].y + dy };
       playTone(660, "sine", 0.15, 0.2);
-    } else if (head.x === portals.x && head.y === portals.y) {
-      head = { x: portals.x + dx, y: portals.y + dy };
+    } else if (head.x === portals[1].x && head.y === portals[1].y) {
+      head = { x: portals[0].x + dx, y: portals[0].y + dy };
       playTone(660, "sine", 0.15, 0.2);
     }
     head.x = (head.x + tileCount) % tileCount;
@@ -543,15 +543,14 @@ document.querySelectorAll(".dpad-btn").forEach(btn => {
     e.preventDefault();
     setDirection(btn.dataset.dir);
   };
+  btn.addEventListener("pointerdown", handleDir);
   btn.addEventListener("touchstart", handleDir, { passive: false });
-  btn.addEventListener("mousedown", handleDir);
 });
 
 const boostBtn = document.getElementById("btn-boost");
-boostBtn.addEventListener("touchstart", (e) => { e.preventDefault(); isBoosting = true; }, { passive: false });
-boostBtn.addEventListener("touchend", () => { isBoosting = false; });
-boostBtn.addEventListener("mousedown", () => { isBoosting = true; });
-boostBtn.addEventListener("mouseup", () => { isBoosting = false; });
+boostBtn.addEventListener("pointerdown", (e) => { e.preventDefault(); isBoosting = true; });
+boostBtn.addEventListener("pointerup", () => { isBoosting = false; });
+boostBtn.addEventListener("pointercancel", () => { isBoosting = false; });
 
 function startGame() {
   initAudio();
